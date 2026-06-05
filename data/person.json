@@ -64,11 +64,5 @@
     "personName": "Zeeshan",
     "action": "enter",
     "timestamp": "2026-06-04T20:00:00+05:00"
-  },
-  {
-    "id": "prs_wfo6e8tcp2tik",
-    "personName": "Zeeshan",
-    "action": "exit",
-    "timestamp": "2026-06-05T17:27:19.551Z"
   }
 ]
