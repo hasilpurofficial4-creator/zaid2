@@ -4,5 +4,11 @@
     "personName": "Nadeem",
     "action": "enter",
     "timestamp": "2026-06-05T13:43:17.656Z"
+  },
+  {
+    "id": "prs_i52iq4yklqvxq",
+    "personName": "Nadeem",
+    "action": "exit",
+    "timestamp": "2026-06-05T13:54:11.887Z"
   }
 ]
