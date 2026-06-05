@@ -31,8 +31,8 @@
     "category": "Urgent Action",
     "subject": "r",
     "description": "test4",
-    "status": "open",
-    "solvedAt": null,
+    "status": "solved",
+    "solvedAt": "2026-06-05T13:56:29.371Z",
     "timestamp": "2026-06-05T13:56:24.985Z"
   }
 ]
