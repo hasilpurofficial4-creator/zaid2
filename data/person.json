@@ -88,5 +88,11 @@
     "personName": "Zeeshan",
     "action": "enter",
     "timestamp": "2026-06-05T17:27:20.385Z"
+  },
+  {
+    "id": "prs_5qhi8mscudepo",
+    "personName": "Zeeshan",
+    "action": "exit",
+    "timestamp": "2026-06-05T17:27:25.033Z"
   }
 ]
