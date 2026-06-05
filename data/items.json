@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "id": "b84u79n90ogin",
+    "name": "gfd",
+    "number": "432",
+    "quantity": 1,
+    "model": "re",
+    "person": "42",
+    "status": "available",
+    "timestamp": "2026-06-05T14:01:49.620Z"
+  }
+]
