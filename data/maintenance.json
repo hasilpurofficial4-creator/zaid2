@@ -1,38 +1,20 @@
 [
   {
-    "id": "mnt_1wzdxytz5ulv8",
-    "category": "Complaint",
-    "subject": "hi",
-    "description": "testing service",
-    "status": "open",
-    "solvedAt": null,
-    "timestamp": "2026-06-05T13:55:32.103Z"
-  },
-  {
-    "id": "mnt_hzwbaacw967ar",
+    "id": "mnt_head8plate_20260605",
     "category": "Issue",
-    "subject": "d",
-    "description": "test 2",
-    "status": "open",
-    "solvedAt": null,
-    "timestamp": "2026-06-05T13:55:43.794Z"
-  },
-  {
-    "id": "mnt_qyg81ohm78f04",
-    "category": "Service",
-    "subject": "c",
-    "description": "test 3",
-    "status": "open",
-    "solvedAt": null,
-    "timestamp": "2026-06-05T13:56:12.268Z"
-  },
-  {
-    "id": "mnt_2giou1asq92lu",
-    "category": "Urgent Action",
-    "subject": "r",
-    "description": "test4",
+    "subject": "Machine Head Issue",
+    "description": "Head number 8 color plate broken.",
     "status": "solved",
-    "solvedAt": "2026-06-05T13:56:29.371Z",
-    "timestamp": "2026-06-05T13:56:24.985Z"
+    "solvedAt": "2026-06-05T07:00:00.000Z",
+    "timestamp": "2026-06-05T04:00:00.000Z"
+  },
+  {
+    "id": "mnt_cutterslip_20260605",
+    "category": "Issue",
+    "subject": "Machine Cutter Slipping",
+    "description": "Machine cutter slipping during operation.",
+    "status": "open",
+    "solvedAt": null,
+    "timestamp": "2026-06-05T08:00:00.000Z"
   }
 ]
