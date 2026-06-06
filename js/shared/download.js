@@ -1,4 +1,4 @@
-// Download utility - Excel (.xlsx) and Screenshot (.png) exports
+// Download utility - Excel (.xlsx), Screenshot (.png), and PDF exports
 import { formatTimestamp, formatCurrency } from './utils.js';
 
 // Section column definitions for Excel export
@@ -120,6 +120,63 @@ export function downloadXlsx(section, data) {
 }
 
 /**
+ * Capture a section card as a high-res canvas
+ */
+async function captureCard(card) {
+  // Temporarily expand section body to show all content
+  const body = card.querySelector('.section-body');
+  const originalMaxHeight = body ? body.style.maxHeight : '';
+  const originalOverflow = body ? body.style.overflow : '';
+  if (body) {
+    body.style.maxHeight = 'none';
+    body.style.overflow = 'visible';
+  }
+
+  // Also expand the card overflow
+  const originalCardOverflow = card.style.overflow;
+  card.style.overflow = 'visible';
+
+  // Close any open dropdowns during capture
+  document.querySelectorAll('.download-dropdown.open').forEach(d => d.classList.remove('open'));
+
+  const canvas = await html2canvas(card, {
+    scale: 3, // High resolution (3x)
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#f8fafc',
+    logging: false,
+    windowWidth: card.scrollWidth,
+    windowHeight: card.scrollHeight
+  });
+
+  // Restore styles
+  if (body) {
+    body.style.maxHeight = originalMaxHeight;
+    body.style.overflow = originalOverflow;
+  }
+  card.style.overflow = originalCardOverflow;
+
+  return canvas;
+}
+
+/**
+ * Set loading state on download button
+ */
+function setLoading(card, loading) {
+  const btn = card.querySelector('.download-btn');
+  if (!btn) return null;
+  const original = btn.innerHTML;
+  if (loading) {
+    btn.innerHTML = '<span style="font-size:11px;">Capturing...</span>';
+    btn.disabled = true;
+  } else {
+    btn.innerHTML = original;
+    btn.disabled = false;
+  }
+  return original;
+}
+
+/**
  * Export section card as high-res PNG screenshot
  */
 export async function downloadScreenshot(sectionId) {
@@ -129,49 +186,12 @@ export async function downloadScreenshot(sectionId) {
     return;
   }
 
-  // Show loading state
-  const btn = card.querySelector('.download-btn');
-  const originalHtml = btn ? btn.innerHTML : '';
-  if (btn) {
-    btn.innerHTML = '<span style="font-size:11px;">Capturing...</span>';
-    btn.disabled = true;
-  }
+  const originalHtml = setLoading(card, true);
 
   try {
-    // Wait a tick for UI update
     await new Promise(r => setTimeout(r, 100));
+    const canvas = await captureCard(card);
 
-    // Temporarily expand section body to show all content
-    const body = card.querySelector('.section-body');
-    const originalMaxHeight = body ? body.style.maxHeight : '';
-    const originalOverflow = body ? body.style.overflow : '';
-    if (body) {
-      body.style.maxHeight = 'none';
-      body.style.overflow = 'visible';
-    }
-
-    // Also expand the card overflow
-    const originalCardOverflow = card.style.overflow;
-    card.style.overflow = 'visible';
-
-    const canvas = await html2canvas(card, {
-      scale: 3, // High resolution (3x)
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#f8fafc',
-      logging: false,
-      windowWidth: card.scrollWidth,
-      windowHeight: card.scrollHeight
-    });
-
-    // Restore styles
-    if (body) {
-      body.style.maxHeight = originalMaxHeight;
-      body.style.overflow = originalOverflow;
-    }
-    card.style.overflow = originalCardOverflow;
-
-    // Download
     const link = document.createElement('a');
     const dateStr = new Date().toISOString().slice(0, 10);
     link.download = `${sectionId}_${dateStr}.png`;
@@ -181,6 +201,56 @@ export async function downloadScreenshot(sectionId) {
     console.error('Screenshot failed:', err);
     alert('Screenshot failed. Please try again.');
   } finally {
+    const btn = card.querySelector('.download-btn');
+    if (btn) {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+    }
+  }
+}
+
+/**
+ * Export section card as PDF document
+ */
+export async function downloadPdf(sectionId) {
+  const card = document.getElementById(`section-${sectionId}`);
+  if (!card) {
+    alert('Section not found');
+    return;
+  }
+
+  const originalHtml = setLoading(card, true);
+
+  try {
+    await new Promise(r => setTimeout(r, 100));
+    const canvas = await captureCard(card);
+
+    // Create PDF using jsPDF
+    const { jsPDF } = window.jspdf;
+
+    // Calculate PDF dimensions to fit the image
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+
+    // Use landscape if wider than tall, portrait otherwise
+    const isLandscape = imgWidth > imgHeight;
+    const pdf = new jsPDF({
+      orientation: isLandscape ? 'landscape' : 'portrait',
+      unit: 'px',
+      format: [imgWidth / 3, imgHeight / 3] // Divide by scale factor (3x)
+    });
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth / 3, imgHeight / 3);
+
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const title = SECTION_TITLES[sectionId] || sectionId;
+    pdf.save(`${sectionId}_${dateStr}.pdf`);
+  } catch (err) {
+    console.error('PDF export failed:', err);
+    alert('PDF export failed. Please try again.');
+  } finally {
+    const btn = card.querySelector('.download-btn');
     if (btn) {
       btn.innerHTML = originalHtml;
       btn.disabled = false;
@@ -217,11 +287,12 @@ export function initDownloadButtons() {
         dropdown.classList.remove('open');
 
         if (format === 'xlsx') {
-          // Get data from the global allData
           const data = window.__sectionData?.[section] || [];
           downloadXlsx(section, data);
         } else if (format === 'png') {
           await downloadScreenshot(section);
+        } else if (format === 'pdf') {
+          await downloadPdf(section);
         }
       });
     });
