@@ -913,3 +913,122 @@ a:hover {
     display: none !important;
   }
 }
+
+/* ---------- Download Dropdown ---------- */
+.section-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.download-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.download-btn:hover {
+  background: var(--accent);
+  color: var(--text-inverse);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.download-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.download-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.download-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  z-index: 200;
+  overflow: hidden;
+  animation: dropdownSlide 0.2s ease;
+}
+
+.download-dropdown.open .download-menu {
+  display: block;
+}
+
+@keyframes dropdownSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.download-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--transition);
+  text-align: left;
+}
+
+.download-option:hover {
+  background: var(--bg-hover);
+}
+
+.download-option svg {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.download-option:first-child {
+  border-bottom: 1px solid var(--border);
+}
+
+.download-option[data-format="xlsx"]:hover {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.download-option[data-format="xlsx"]:hover svg {
+  color: #16a34a;
+}
+
+.download-option[data-format="png"]:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.download-option[data-format="png"]:hover svg {
+  color: #2563eb;
+}

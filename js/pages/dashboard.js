@@ -8,6 +8,7 @@ import { renderPerson } from '../sections/person.js';
 import { renderMaintenance } from '../sections/maintenance.js';
 import { renderSamples } from '../sections/samples.js';
 import { renderClipping } from '../sections/clipping.js';
+import { initDownloadButtons } from '../shared/download.js';
 
 const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
 let previousData = {};
@@ -23,6 +24,10 @@ async function loadSection(section) {
     }
     previousData[section] = data;
     allData[section] = data;
+
+    // Expose data globally for download module
+    if (!window.__sectionData) window.__sectionData = {};
+    window.__sectionData[section] = data;
 
     const container = document.getElementById(`${section}-body`);
     if (!container) return;
@@ -143,6 +148,9 @@ function filterData(section, data, query) {
 }
 
 setupSearch();
+
+// Initialize download buttons
+initDownloadButtons();
 
 // Initial load
 loadAllSections();
