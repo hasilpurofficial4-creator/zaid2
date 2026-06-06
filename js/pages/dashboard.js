@@ -11,6 +11,7 @@ import { renderClipping } from '../sections/clipping.js';
 
 const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
 let previousData = {};
+let allData = {};
 
 async function loadSection(section) {
   try {
@@ -21,6 +22,7 @@ async function loadSection(section) {
       showToast('Data Updated', `${section.charAt(0).toUpperCase() + section.slice(1)} section has been updated`, 'success');
     }
     previousData[section] = data;
+    allData[section] = data;
 
     const container = document.getElementById(`${section}-body`);
     if (!container) return;
@@ -67,6 +69,80 @@ async function loadSection(section) {
 async function loadAllSections() {
   await Promise.all(SECTIONS.map(s => loadSection(s)));
 }
+
+// Search functionality
+function setupSearch() {
+  const searchInput = document.getElementById('dashboard-search');
+  if (!searchInput) return;
+
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.trim().toLowerCase();
+
+    if (!query) {
+      // Reset: re-render all with full data
+      SECTIONS.forEach(section => {
+        const container = document.getElementById(`${section}-body`);
+        const card = document.getElementById(`section-${section}`);
+        if (card) card.style.display = '';
+        if (container && allData[section]) {
+          renderSection(section, container, allData[section]);
+        }
+      });
+      return;
+    }
+
+    SECTIONS.forEach(section => {
+      const container = document.getElementById(`${section}-body`);
+      const card = document.getElementById(`section-${section}`);
+      const data = allData[section] || [];
+      const filtered = filterData(section, data, query);
+
+      if (card) card.style.display = filtered.length > 0 ? '' : 'none';
+      if (container) renderSection(section, container, filtered);
+    });
+  });
+}
+
+function renderSection(section, container, data) {
+  const opts = { isAdmin: false };
+  switch (section) {
+    case 'items': renderItems(container, data, opts); break;
+    case 'wallet': renderWallet(container, data, opts); break;
+    case 'person': renderPerson(container, data, opts); break;
+    case 'maintenance': renderMaintenance(container, data, opts); break;
+    case 'samples': renderSamples(container, data, opts); break;
+    case 'clipping': renderClipping(container, data, opts); break;
+  }
+}
+
+function filterData(section, data, query) {
+  return data.filter(entry => {
+    const searchFields = [];
+    switch (section) {
+      case 'items':
+        searchFields.push(entry.name, entry.number, entry.model, entry.person, entry.status);
+        break;
+      case 'wallet':
+        searchFields.push(entry.personOrPurpose, entry.type, String(entry.amount));
+        break;
+      case 'person':
+        searchFields.push(entry.personName, entry.action);
+        break;
+      case 'maintenance':
+        searchFields.push(entry.subject, entry.description, entry.category, entry.status);
+        break;
+      case 'samples':
+        searchFields.push(entry.personName, entry.program, entry.pieces, entry.type);
+        break;
+      case 'clipping':
+        searchFields.push(entry.clipperName, entry.size, entry.type);
+        break;
+    }
+    return searchFields.some(f => f && String(f).toLowerCase().includes(query));
+  });
+}
+
+setupSearch();
 
 // Initial load
 loadAllSections();

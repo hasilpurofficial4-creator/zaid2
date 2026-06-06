@@ -14,23 +14,11 @@ export function renderSamples(container, data, { isAdmin = false, onRefresh } = 
 
   const wrapper = document.createElement('div');
 
-  // Three columns: Out for Clipping, Sample Out, Sample In
+  // Two columns: Sample Out (left), Sample In (right)
   const columns = document.createElement('div');
   columns.className = 'dual-column';
-  columns.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;';
 
-  // Out for Clipping (left)
-  const clipCol = document.createElement('div');
-  clipCol.className = 'column-out';
-  clipCol.innerHTML = `<div class="column-header" style="color:var(--warning);">Out for Clipping</div>`;
-  const clipList = document.createElement('div');
-  clipList.className = 'entry-list';
-  const clipEntries = data.filter(e => e.type === 'out_for_clipping');
-  clipEntries.forEach(entry => clipList.appendChild(createRow(entry, isAdmin, onRefresh)));
-  if (clipEntries.length === 0) clipList.innerHTML = '<div class="empty-state"><p>None</p></div>';
-  clipCol.appendChild(clipList);
-
-  // Sample Out (middle)
+  // Sample Out (left)
   const outCol = document.createElement('div');
   outCol.className = 'column-out';
   outCol.innerHTML = `<div class="column-header" style="color:var(--danger);">Sample Out</div>`;
@@ -52,7 +40,6 @@ export function renderSamples(container, data, { isAdmin = false, onRefresh } = 
   if (inEntries.length === 0) inList.innerHTML = '<div class="empty-state"><p>None</p></div>';
   inCol.appendChild(inList);
 
-  columns.appendChild(clipCol);
   columns.appendChild(outCol);
   columns.appendChild(inCol);
   wrapper.appendChild(columns);
@@ -62,7 +49,6 @@ export function renderSamples(container, data, { isAdmin = false, onRefresh } = 
 
 function getTypeLabel(type) {
   if (type === 'in') return 'Sample In';
-  if (type === 'out_for_clipping') return 'Out for Clipping';
   return 'Sample Out';
 }
 
@@ -117,7 +103,7 @@ function openEdit(entry, onRefresh) {
   showEditModal(entry, {
     title: 'Edit Sample Entry',
     fields: [
-      { key: 'type', label: 'Type', type: 'select', options: ['in', 'out', 'out_for_clipping'] },
+      { key: 'type', label: 'Type', type: 'select', options: ['in', 'out'] },
       { key: 'personName', label: 'Person Name', type: 'text' },
       { key: 'program', label: 'Program', type: 'text' },
       { key: 'pieces', label: 'Pieces', type: 'text' }

@@ -199,7 +199,6 @@
           <div class="type-toggle">
             <button class="type-toggle-btn active-in" id="samples-type-in" onclick="setSamplesType('in')">Sample In</button>
             <button class="type-toggle-btn" id="samples-type-out" onclick="setSamplesType('out')">Sample Out</button>
-            <button class="type-toggle-btn" id="samples-type-clipping" onclick="setSamplesType('out_for_clipping')">Out for Clipping</button>
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -305,7 +304,6 @@
       window.samplesType = type;
       document.getElementById('samples-type-in').className = 'type-toggle-btn' + (type === 'in' ? ' active-in' : '');
       document.getElementById('samples-type-out').className = 'type-toggle-btn' + (type === 'out' ? ' active-out' : '');
-      document.getElementById('samples-type-clipping').className = 'type-toggle-btn' + (type === 'out_for_clipping' ? ' active-out' : '');
     }
     let clippingType = 'in';
     window.clippingType = 'in';
