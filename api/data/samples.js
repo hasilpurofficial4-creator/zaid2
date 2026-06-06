@@ -30,6 +30,7 @@ module.exports = async function handler(req, res) {
           id: generateId(),
           type: body.type || 'in',
           personName: body.personName || '',
+          program: body.program || '',
           pieces: body.pieces || '',
           timestamp: new Date().toISOString()
         });

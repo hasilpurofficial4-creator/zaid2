@@ -12,14 +12,30 @@ export function renderClipping(container, data, { isAdmin = false, onRefresh } =
     return;
   }
 
+  // Calculate total clipped-in sizes
+  const inEntries = data.filter(e => e.type === 'in');
+  let totalSize = 0;
+  inEntries.forEach(e => {
+    const num = parseFloat(e.size);
+    if (!isNaN(num)) totalSize += num;
+  });
+
   const wrapper = document.createElement('div');
+
+  // Total size display at top
+  const totalDiv = document.createElement('div');
+  totalDiv.className = 'balance-display balance-positive';
+  totalDiv.style.cssText = 'text-align:center;margin-bottom:16px;padding:12px;font-size:1.1rem;';
+  totalDiv.innerHTML = `Total Clipped In: <strong>${totalSize}</strong> <span style="font-size:0.8rem;color:var(--text-muted);">(${inEntries.length} entries)</span>`;
+  wrapper.appendChild(totalDiv);
+
   const columns = document.createElement('div');
   columns.className = 'dual-column';
 
   // Out entries (left)
   const outCol = document.createElement('div');
   outCol.className = 'column-out';
-  outCol.innerHTML = `<div class="column-header">Out for Clipping</div>`;
+  outCol.innerHTML = `<div class="column-header" style="color:var(--warning);">Out for Clipping</div>`;
   const outList = document.createElement('div');
   outList.className = 'entry-list';
   const outEntries = data.filter(e => e.type === 'out');
@@ -30,10 +46,9 @@ export function renderClipping(container, data, { isAdmin = false, onRefresh } =
   // In entries (right)
   const inCol = document.createElement('div');
   inCol.className = 'column-in';
-  inCol.innerHTML = `<div class="column-header">Clipped In</div>`;
+  inCol.innerHTML = `<div class="column-header" style="color:var(--success);">Clipped In</div>`;
   const inList = document.createElement('div');
   inList.className = 'entry-list';
-  const inEntries = data.filter(e => e.type === 'in');
   inEntries.forEach(entry => inList.appendChild(createRow(entry, isAdmin, onRefresh)));
   if (inEntries.length === 0) inList.innerHTML = '<div class="empty-state"><p>No in entries</p></div>';
   inCol.appendChild(inList);
@@ -51,7 +66,7 @@ function createRow(entry, isAdmin, onRefresh) {
   row.innerHTML = `
     <div class="entry-info">
       <div class="entry-title">${escapeHtml(entry.clipperName)}</div>
-      <div class="entry-subtitle">${escapeHtml(entry.size) || ''} · ${formatTimestamp(entry.timestamp)}</div>
+      <div class="entry-subtitle">Size: ${escapeHtml(entry.size) || '-'} · ${formatTimestamp(entry.timestamp)}</div>
     </div>
     ${isAdmin ? `
       <div class="entry-actions" style="opacity:1;">

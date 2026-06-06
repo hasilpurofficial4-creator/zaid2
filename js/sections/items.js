@@ -1,40 +1,51 @@
-// Items Section UI renderer
+// Items Section UI renderer - Grid layout
 import { formatTimestamp, escapeHtml, ICONS } from '../shared/utils.js';
 import { showDetailModal, showEditModal } from '../shared/modal.js';
 import { deleteEntry, updateEntry } from '../shared/api.js';
 
 export function renderItems(container, data, { isAdmin = false, onRefresh } = {}) {
+  const countBadge = document.getElementById('items-count');
+  if (countBadge) countBadge.textContent = `${data.length} items`;
+
   if (!data || data.length === 0) {
     container.innerHTML = `<div class="empty-state">${ICONS.box}<p>No items yet</p></div>`;
     return;
   }
 
-  const list = document.createElement('div');
-  list.className = 'entry-list';
+  const grid = document.createElement('div');
+  grid.className = 'items-grid';
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;';
 
   data.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'entry-row';
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.style.cssText = 'background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px;cursor:pointer;transition:all 0.2s ease;position:relative;';
 
-    row.innerHTML = `
-      <div class="entry-info">
-        <div class="entry-title">${escapeHtml(item.name)}</div>
-        <div class="entry-subtitle">${item.model ? escapeHtml(item.model) + ' · ' : ''}${item.number ? '#' + escapeHtml(item.number) + ' · ' : ''}Qty: ${item.quantity || 1}${item.person ? ' · ' + escapeHtml(item.person) : ''}</div>
-      </div>
-      <div class="entry-meta">
-        <span class="section-badge ${item.status === 'available' ? 'badge-success' : 'badge-warning'}">${escapeHtml(item.status || 'available')}</span>
-        <span class="entry-timestamp">${formatTimestamp(item.timestamp)}</span>
-        ${isAdmin ? `
-          <div class="entry-actions" style="opacity:1;">
-            <button class="btn btn-icon btn-ghost btn-sm edit-btn" title="Edit">${ICONS.edit}</button>
-            <button class="btn btn-icon btn-ghost btn-sm delete-btn" title="Delete">${ICONS.trash}</button>
-          </div>
-        ` : ''}
-      </div>
+    card.innerHTML = `
+      <div style="font-size:0.95rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.name)}</div>
+      <div style="font-size:0.75rem;color:var(--text-secondary);margin-bottom:4px;">${item.number ? 'S/N: ' + escapeHtml(item.number) : 'No serial'}</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);">${item.model ? escapeHtml(item.model) : 'No model'}</div>
+      <span class="section-badge ${item.status === 'available' ? 'badge-success' : 'badge-warning'}" style="position:absolute;top:8px;right:8px;font-size:0.6rem;padding:2px 6px;">${escapeHtml(item.status || 'available')}</span>
+      ${isAdmin ? `<div class="item-card-actions" style="display:none;position:absolute;bottom:8px;right:8px;gap:4px;">
+        <button class="btn btn-icon btn-ghost btn-sm edit-btn">${ICONS.edit}</button>
+        <button class="btn btn-icon btn-ghost btn-sm delete-btn">${ICONS.trash}</button>
+      </div>` : ''}
     `;
 
-    // Click to show details
-    row.addEventListener('click', (e) => {
+    // Show actions on hover (admin only)
+    if (isAdmin) {
+      card.addEventListener('mouseenter', () => {
+        const actions = card.querySelector('.item-card-actions');
+        if (actions) actions.style.display = 'flex';
+      });
+      card.addEventListener('mouseleave', () => {
+        const actions = card.querySelector('.item-card-actions');
+        if (actions) actions.style.display = 'none';
+      });
+    }
+
+    // Click to show full details
+    card.addEventListener('click', (e) => {
       if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
       showDetailModal(item, {
         title: item.name,
@@ -54,8 +65,7 @@ export function renderItems(container, data, { isAdmin = false, onRefresh } = {}
       });
     });
 
-    // Edit button
-    const editBtn = row.querySelector('.edit-btn');
+    const editBtn = card.querySelector('.edit-btn');
     if (editBtn) {
       editBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -63,8 +73,7 @@ export function renderItems(container, data, { isAdmin = false, onRefresh } = {}
       });
     }
 
-    // Delete button
-    const deleteBtn = row.querySelector('.delete-btn');
+    const deleteBtn = card.querySelector('.delete-btn');
     if (deleteBtn) {
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -74,11 +83,11 @@ export function renderItems(container, data, { isAdmin = false, onRefresh } = {}
       });
     }
 
-    list.appendChild(row);
+    grid.appendChild(card);
   });
 
   container.innerHTML = '';
-  container.appendChild(list);
+  container.appendChild(grid);
 }
 
 function openEditForm(item, onRefresh) {

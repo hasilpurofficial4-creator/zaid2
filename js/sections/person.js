@@ -1,13 +1,21 @@
-// Person Details Section UI renderer
+// Person Details Section UI renderer - Dynamic workers + time editing
 import { formatTimestamp, formatShortTime, escapeHtml, calculateHours, getAbsents, getMonthName, ICONS } from '../shared/utils.js';
-import { showDetailModal } from '../shared/modal.js';
-import { createEntry, deleteEntry } from '../shared/api.js';
+import { showDetailModal, showEditModal } from '../shared/modal.js';
+import { createEntry, deleteEntry, updateEntry } from '../shared/api.js';
 
 export function renderPerson(container, data, { isAdmin = false, onRefresh } = {}) {
   const now = new Date();
   const month = now.getMonth();
   const year = now.getFullYear();
-  const workers = ['Nadeem', 'Zeeshan'];
+
+  // Extract unique workers dynamically from data
+  const workerSet = new Set();
+  const defaultWorkers = ['Nadeem', 'Zeeshan'];
+  defaultWorkers.forEach(w => workerSet.add(w));
+  if (data && data.length > 0) {
+    data.forEach(e => { if (e.personName) workerSet.add(e.personName); });
+  }
+  const workers = [...workerSet].sort();
 
   const wrapper = document.createElement('div');
   wrapper.innerHTML = `<div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:var(--space-md);text-align:center;">${getMonthName(month)} ${year}</div>`;
@@ -25,7 +33,7 @@ export function renderPerson(container, data, { isAdmin = false, onRefresh } = {
     card.innerHTML = `
       <div class="worker-name">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        ${name}
+        ${escapeHtml(name)}
       </div>
       ${isAdmin ? `
         <div class="worker-actions">
@@ -76,17 +84,31 @@ export function renderPerson(container, data, { isAdmin = false, onRefresh } = {
       todayEntries.forEach(entry => {
         const eRow = document.createElement('div');
         eRow.className = `entry-row entry-${entry.action === 'enter' ? 'in' : 'out'}`;
-        eRow.style.padding = '4px 8px';
+        eRow.style.cssText = 'padding:4px 8px;cursor:pointer;';
         eRow.innerHTML = `
           <div class="entry-info">
             <span class="section-badge ${entry.action === 'enter' ? 'badge-success' : 'badge-danger'}">${entry.action === 'enter' ? 'Enter' : 'Exit'}</span>
           </div>
           <span class="entry-timestamp">${formatShortTime(entry.timestamp)}</span>
-          ${isAdmin ? `<button class="btn btn-icon btn-ghost btn-sm del-btn">${ICONS.trash}</button>` : ''}
+          ${isAdmin ? `
+            <div style="display:flex;gap:2px;">
+              <button class="btn btn-icon btn-ghost btn-sm time-btn" title="Edit time">${ICONS.clock}</button>
+              <button class="btn btn-icon btn-ghost btn-sm del-btn">${ICONS.trash}</button>
+            </div>
+          ` : ''}
         `;
 
+        // Edit time (admin)
+        const timeBtn = eRow.querySelector('.time-btn');
+        if (timeBtn) {
+          timeBtn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            openTimeEdit(entry, onRefresh);
+          });
+        }
+
         eRow.addEventListener('click', (ev) => {
-          if (ev.target.closest('.del-btn')) return;
+          if (ev.target.closest('.del-btn') || ev.target.closest('.time-btn')) return;
           showDetailModal(entry, {
             title: `${name} - ${entry.action === 'enter' ? 'Entry' : 'Exit'}`,
             fields: [
@@ -95,6 +117,7 @@ export function renderPerson(container, data, { isAdmin = false, onRefresh } = {
               { label: 'Time', value: formatTimestamp(entry.timestamp) }
             ],
             isAdmin,
+            onEdit: () => openTimeEdit(entry, onRefresh),
             onDelete: async () => {
               await deleteEntry('person', entry.id);
               if (onRefresh) onRefresh();
@@ -134,13 +157,42 @@ export function renderPerson(container, data, { isAdmin = false, onRefresh } = {
     recentEntries.forEach(entry => {
       const row = document.createElement('div');
       row.className = `entry-row entry-${entry.action === 'enter' ? 'in' : 'out'}`;
+      row.style.cursor = 'pointer';
       row.innerHTML = `
         <div class="entry-info">
           <div class="entry-title">${escapeHtml(entry.personName)}</div>
           <div class="entry-subtitle">${entry.action === 'enter' ? 'Checked In' : 'Checked Out'}</div>
         </div>
         <span class="entry-timestamp">${formatTimestamp(entry.timestamp)}</span>
+        ${isAdmin ? `<button class="btn btn-icon btn-ghost btn-sm time-edit-btn" title="Edit time">${ICONS.clock}</button>` : ''}
       `;
+
+      const timeEditBtn = row.querySelector('.time-edit-btn');
+      if (timeEditBtn) {
+        timeEditBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          openTimeEdit(entry, onRefresh);
+        });
+      }
+
+      row.addEventListener('click', (ev) => {
+        if (ev.target.closest('.time-edit-btn')) return;
+        showDetailModal(entry, {
+          title: `${entry.personName} - ${entry.action === 'enter' ? 'Entry' : 'Exit'}`,
+          fields: [
+            { label: 'Worker', value: entry.personName },
+            { label: 'Action', value: entry.action === 'enter' ? 'Entry' : 'Exit' },
+            { label: 'Time', value: formatTimestamp(entry.timestamp) }
+          ],
+          isAdmin,
+          onEdit: () => openTimeEdit(entry, onRefresh),
+          onDelete: async () => {
+            await deleteEntry('person', entry.id);
+            if (onRefresh) onRefresh();
+          }
+        });
+      });
+
       list.appendChild(row);
     });
 
@@ -150,4 +202,24 @@ export function renderPerson(container, data, { isAdmin = false, onRefresh } = {
 
   container.innerHTML = '';
   container.appendChild(wrapper);
+}
+
+// Open time edit modal
+function openTimeEdit(entry, onRefresh) {
+  const d = new Date(entry.timestamp);
+  const dateStr = d.toISOString().slice(0, 16); // yyyy-MM-ddTHH:mm
+
+  showEditModal(entry, {
+    title: `Edit ${entry.personName}'s ${entry.action === 'enter' ? 'Entry' : 'Exit'} Time`,
+    fields: [
+      { key: 'timestamp', label: 'Date & Time', type: 'datetime-local', value: dateStr }
+    ],
+    onSave: async (updated) => {
+      if (updated.timestamp) {
+        updated.timestamp = new Date(updated.timestamp).toISOString();
+      }
+      await updateEntry('person', entry.id, updated);
+      if (onRefresh) onRefresh();
+    }
+  });
 }

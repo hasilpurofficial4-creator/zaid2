@@ -132,7 +132,7 @@ export function showEditModal(entry, { title, fields, onSave }) {
       const input = document.createElement('input');
       input.type = field.type || 'text';
       input.className = 'form-input';
-      input.value = entry[field.key] || '';
+      input.value = field.value || entry[field.key] || '';
       if (field.placeholder) input.placeholder = field.placeholder;
       inputs[field.key] = input;
       group.appendChild(input);

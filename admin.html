@@ -124,6 +124,22 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             Person Details
           </div>
+          <button class="btn btn-primary btn-sm" onclick="toggleForm('person')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Worker
+          </button>
+        </div>
+        <div class="add-form-panel" id="person-form-panel">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Worker Name *</label>
+              <input type="text" class="form-input" id="person-name" placeholder="Enter worker name">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-ghost btn-sm" onclick="toggleForm('person')">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="person-submit">Add Worker</button>
+          </div>
         </div>
         <div class="section-body" id="person-body">
           <div class="loading-overlay"><span class="loading-spinner"></span> Loading...</div>
@@ -183,12 +199,19 @@
           <div class="type-toggle">
             <button class="type-toggle-btn active-in" id="samples-type-in" onclick="setSamplesType('in')">Sample In</button>
             <button class="type-toggle-btn" id="samples-type-out" onclick="setSamplesType('out')">Sample Out</button>
+            <button class="type-toggle-btn" id="samples-type-clipping" onclick="setSamplesType('out_for_clipping')">Out for Clipping</button>
           </div>
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Person Name *</label>
               <input type="text" class="form-input" id="samples-person" placeholder="Person name">
             </div>
+            <div class="form-group">
+              <label class="form-label">Program</label>
+              <input type="text" class="form-input" id="samples-program" placeholder="Program name">
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label">Pieces</label>
               <input type="text" class="form-input" id="samples-pieces" placeholder="Optional">
@@ -267,21 +290,28 @@
       panel.classList.toggle('active');
     }
     let walletType = 'in';
+    window.walletType = 'in';
     function setWalletType(type) {
       walletType = type;
+      window.walletType = type;
       document.getElementById('wallet-type-in').className = 'type-toggle-btn' + (type === 'in' ? ' active-in' : '');
       document.getElementById('wallet-type-out').className = 'type-toggle-btn' + (type === 'out' ? ' active-out' : '');
       document.getElementById('wallet-label').textContent = type === 'in' ? 'Person Name' : 'Used For';
     }
     let samplesType = 'in';
+    window.samplesType = 'in';
     function setSamplesType(type) {
       samplesType = type;
+      window.samplesType = type;
       document.getElementById('samples-type-in').className = 'type-toggle-btn' + (type === 'in' ? ' active-in' : '');
       document.getElementById('samples-type-out').className = 'type-toggle-btn' + (type === 'out' ? ' active-out' : '');
+      document.getElementById('samples-type-clipping').className = 'type-toggle-btn' + (type === 'out_for_clipping' ? ' active-out' : '');
     }
     let clippingType = 'in';
+    window.clippingType = 'in';
     function setClippingType(type) {
       clippingType = type;
+      window.clippingType = type;
       document.getElementById('clipping-type-in').className = 'type-toggle-btn' + (type === 'in' ? ' active-in' : '');
       document.getElementById('clipping-type-out').className = 'type-toggle-btn' + (type === 'out' ? ' active-out' : '');
     }

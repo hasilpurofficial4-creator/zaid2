@@ -13,31 +13,46 @@ export function renderSamples(container, data, { isAdmin = false, onRefresh } = 
   }
 
   const wrapper = document.createElement('div');
+
+  // Three columns: Out for Clipping, Sample Out, Sample In
   const columns = document.createElement('div');
   columns.className = 'dual-column';
+  columns.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;';
 
-  // Out entries (left)
+  // Out for Clipping (left)
+  const clipCol = document.createElement('div');
+  clipCol.className = 'column-out';
+  clipCol.innerHTML = `<div class="column-header" style="color:var(--warning);">Out for Clipping</div>`;
+  const clipList = document.createElement('div');
+  clipList.className = 'entry-list';
+  const clipEntries = data.filter(e => e.type === 'out_for_clipping');
+  clipEntries.forEach(entry => clipList.appendChild(createRow(entry, isAdmin, onRefresh)));
+  if (clipEntries.length === 0) clipList.innerHTML = '<div class="empty-state"><p>None</p></div>';
+  clipCol.appendChild(clipList);
+
+  // Sample Out (middle)
   const outCol = document.createElement('div');
   outCol.className = 'column-out';
-  outCol.innerHTML = `<div class="column-header">Sample Out</div>`;
+  outCol.innerHTML = `<div class="column-header" style="color:var(--danger);">Sample Out</div>`;
   const outList = document.createElement('div');
   outList.className = 'entry-list';
   const outEntries = data.filter(e => e.type === 'out');
   outEntries.forEach(entry => outList.appendChild(createRow(entry, isAdmin, onRefresh)));
-  if (outEntries.length === 0) outList.innerHTML = '<div class="empty-state"><p>No out entries</p></div>';
+  if (outEntries.length === 0) outList.innerHTML = '<div class="empty-state"><p>None</p></div>';
   outCol.appendChild(outList);
 
-  // In entries (right)
+  // Sample In (right)
   const inCol = document.createElement('div');
   inCol.className = 'column-in';
-  inCol.innerHTML = `<div class="column-header">Sample In</div>`;
+  inCol.innerHTML = `<div class="column-header" style="color:var(--success);">Sample In</div>`;
   const inList = document.createElement('div');
   inList.className = 'entry-list';
   const inEntries = data.filter(e => e.type === 'in');
   inEntries.forEach(entry => inList.appendChild(createRow(entry, isAdmin, onRefresh)));
-  if (inEntries.length === 0) inList.innerHTML = '<div class="empty-state"><p>No in entries</p></div>';
+  if (inEntries.length === 0) inList.innerHTML = '<div class="empty-state"><p>None</p></div>';
   inCol.appendChild(inList);
 
+  columns.appendChild(clipCol);
   columns.appendChild(outCol);
   columns.appendChild(inCol);
   wrapper.appendChild(columns);
@@ -45,13 +60,20 @@ export function renderSamples(container, data, { isAdmin = false, onRefresh } = 
   container.appendChild(wrapper);
 }
 
+function getTypeLabel(type) {
+  if (type === 'in') return 'Sample In';
+  if (type === 'out_for_clipping') return 'Out for Clipping';
+  return 'Sample Out';
+}
+
 function createRow(entry, isAdmin, onRefresh) {
   const row = document.createElement('div');
-  row.className = `entry-row entry-${entry.type === 'in' ? 'in' : 'out'}`;
+  const colorClass = entry.type === 'in' ? 'entry-in' : 'entry-out';
+  row.className = `entry-row ${colorClass}`;
   row.innerHTML = `
     <div class="entry-info">
       <div class="entry-title">${escapeHtml(entry.personName)}</div>
-      <div class="entry-subtitle">${entry.pieces ? escapeHtml(entry.pieces) + ' pcs · ' : ''}${formatTimestamp(entry.timestamp)}</div>
+      <div class="entry-subtitle">${entry.program ? escapeHtml(entry.program) + ' · ' : ''}${entry.pieces ? escapeHtml(entry.pieces) + ' pcs' : ''} · ${formatTimestamp(entry.timestamp)}</div>
     </div>
     ${isAdmin ? `
       <div class="entry-actions" style="opacity:1;">
@@ -64,10 +86,11 @@ function createRow(entry, isAdmin, onRefresh) {
   row.addEventListener('click', (e) => {
     if (e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
     showDetailModal(entry, {
-      title: `Sample ${entry.type === 'in' ? 'In' : 'Out'}`,
+      title: getTypeLabel(entry.type),
       fields: [
-        { label: 'Type', value: entry.type === 'in' ? 'Sample In' : 'Sample Out' },
+        { label: 'Type', value: getTypeLabel(entry.type) },
         { label: 'Person', value: entry.personName },
+        { label: 'Program', value: entry.program || '-' },
         { label: 'Pieces', value: entry.pieces || '-' },
         { label: 'Timestamp', value: formatTimestamp(entry.timestamp) },
         { label: 'ID', value: entry.id }
@@ -94,8 +117,9 @@ function openEdit(entry, onRefresh) {
   showEditModal(entry, {
     title: 'Edit Sample Entry',
     fields: [
-      { key: 'type', label: 'Type', type: 'select', options: ['in', 'out'] },
+      { key: 'type', label: 'Type', type: 'select', options: ['in', 'out', 'out_for_clipping'] },
       { key: 'personName', label: 'Person Name', type: 'text' },
+      { key: 'program', label: 'Program', type: 'text' },
       { key: 'pieces', label: 'Pieces', type: 'text' }
     ],
     onSave: async (updated) => {

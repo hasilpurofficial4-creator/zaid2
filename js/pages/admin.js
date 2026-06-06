@@ -115,12 +115,32 @@ function setupForms() {
       await createEntry('samples', {
         type: window.samplesType || 'in',
         personName: person,
+        program: document.getElementById('samples-program').value.trim(),
         pieces: document.getElementById('samples-pieces').value.trim()
       });
       document.getElementById('samples-person').value = '';
+      document.getElementById('samples-program').value = '';
       document.getElementById('samples-pieces').value = '';
       document.getElementById('samples-form-panel').classList.remove('active');
       showToast('Success', 'Sample entry added', 'success');
+      loadAllSections();
+    } catch (err) {
+      showToast('Error', err.message, 'error');
+    }
+  });
+
+  // Person submit (add worker)
+  document.getElementById('person-submit')?.addEventListener('click', async () => {
+    const name = document.getElementById('person-name').value.trim();
+    if (!name) { showToast('Error', 'Worker name is required', 'error'); return; }
+    try {
+      await createEntry('person', {
+        personName: name,
+        action: 'enter'
+      });
+      document.getElementById('person-name').value = '';
+      document.getElementById('person-form-panel').classList.remove('active');
+      showToast('Success', `Worker "${name}" added`, 'success');
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
