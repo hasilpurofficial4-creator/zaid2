@@ -41,28 +41,42 @@ export function sortByLatest(arr) {
 }
 
 export function calculateHours(entries, personName, month, year) {
-  const personEntries = entries.filter(e =>
-    e.personName === personName &&
-    new Date(e.timestamp).getMonth() === month &&
-    new Date(e.timestamp).getFullYear() === year
-  );
+  // Get all entries for this person across the selected month AND the next month
+  // (to capture exit timestamps that fall after midnight into the next day/month)
+  const allSorted = entries
+    .filter(e => e.personName === personName)
+    .map(e => ({ ...e, _date: new Date(e.timestamp) }))
+    .sort((a, b) => a._date - b._date);
 
-  // Group by date
-  const byDate = {};
-  personEntries.forEach(e => {
-    const dateKey = new Date(e.timestamp).toDateString();
-    if (!byDate[dateKey]) byDate[dateKey] = { enter: null, exit: null };
-    if (e.action === 'enter' && !byDate[dateKey].enter) byDate[dateKey].enter = new Date(e.timestamp);
-    if (e.action === 'exit') byDate[dateKey].exit = new Date(e.timestamp);
-  });
+  // Filter entries that START in the selected month (enter actions)
+  // but also include exits from the previous month that land in this month
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
+  // Pair enter → exit chronologically (handles night shifts crossing midnight)
   let totalHours = 0;
   let daysWorked = 0;
-  Object.values(byDate).forEach(day => {
-    if (day.enter && day.exit) {
-      const diff = (day.exit - day.enter) / (1000 * 60 * 60);
-      totalHours += diff;
-      daysWorked++;
+  const workedDates = new Set();
+  let pendingEnter = null;
+
+  allSorted.forEach(e => {
+    if (e.action === 'enter') {
+      pendingEnter = e;
+    } else if (e.action === 'exit' && pendingEnter) {
+      const enterDate = pendingEnter._date;
+      const exitDate = e._date;
+      const diff = (exitDate - enterDate) / (1000 * 60 * 60);
+
+      // Only count if the enter happened in the selected month
+      if (enterDate.getMonth() === month && enterDate.getFullYear() === year) {
+        if (diff > 0 && diff <= 24) {
+          totalHours += diff;
+          daysWorked++;
+          // Count the day the shift STARTED on (the enter date)
+          workedDates.add(enterDate.toDateString());
+        }
+      }
+      pendingEnter = null;
     }
   });
 
@@ -75,8 +89,9 @@ export function getAbsents(entries, personName, month, year) {
   const currentDay = (today.getMonth() === month && today.getFullYear() === year) ? today.getDate() : daysInMonth;
   const presentDates = new Set();
 
+  // Only count ENTER dates as present (not exits, which may fall on the next day after night shifts)
   entries.forEach(e => {
-    if (e.personName === personName) {
+    if (e.personName === personName && e.action === 'enter') {
       const d = new Date(e.timestamp);
       if (d.getMonth() === month && d.getFullYear() === year) {
         presentDates.add(d.getDate());
