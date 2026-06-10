@@ -103,5 +103,12 @@
     "personOrPurpose": "FAREED SAHAB",
     "amount": 200,
     "timestamp": "2026-06-10T19:10:34.402Z"
+  },
+  {
+    "id": "wlt_qdie0djretc6h",
+    "type": "in",
+    "personOrPurpose": "FAREED SAHAB",
+    "amount": 300,
+    "timestamp": "2026-06-10T19:10:55.221Z"
   }
 ]
