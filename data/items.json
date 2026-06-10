@@ -1253,10 +1253,10 @@
     "id": "vfmbi8hs7op0u",
     "name": "Thread",
     "number": "1389",
-    "quantity": 1,
+    "quantity": "1",
     "model": "Royal",
     "person": "BUTT SAHAB",
-    "status": "available",
+    "status": "in-use",
     "timestamp": "2026-06-06T16:21:47.216Z"
   },
   {
