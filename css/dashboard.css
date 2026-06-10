@@ -11,6 +11,12 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .stat-card {
@@ -19,6 +25,12 @@
   padding: var(--space-md) var(--space-lg);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-card-title {
@@ -90,6 +102,38 @@
   0% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.8); }
   100% { opacity: 1; transform: scale(1); }
+}
+
+/* Header with gradient on desktop */
+.app-header {
+  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+}
+
+/* Last updated footer in sections */
+.section-last-updated {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: right;
+  padding: var(--space-xs) var(--space-md);
+  border-top: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+/* Dark mode adjustments for download options */
+[data-theme="dark"] .download-option:hover {
+  background: var(--bg-hover);
+}
+
+[data-theme="dark"] .download-option[data-format="xlsx"]:hover {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+[data-theme="dark"] .download-option[data-format="png"]:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="dark"] .download-option[data-format="pdf"]:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* Install prompt banner */

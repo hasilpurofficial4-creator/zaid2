@@ -8,6 +8,10 @@ import { renderPerson } from '../sections/person.js';
 import { renderMaintenance } from '../sections/maintenance.js';
 import { renderSamples } from '../sections/samples.js';
 import { renderClipping } from '../sections/clipping.js';
+import { initTheme } from '../shared/theme.js';
+
+// Initialize theme toggle
+initTheme();
 
 const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
 
