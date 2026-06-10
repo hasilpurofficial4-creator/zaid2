@@ -1,0 +1,20 @@
+[
+  {
+    "id": "mnt_head8plate_20260605",
+    "category": "Issue",
+    "subject": "Machine Head Issue",
+    "description": "Head number 8 color plate broken.",
+    "status": "solved",
+    "solvedAt": "2026-06-05T07:00:00.000Z",
+    "timestamp": "2026-06-05T04:00:00.000Z"
+  },
+  {
+    "id": "mnt_cutterslip_20260605",
+    "category": "Issue",
+    "subject": "Machine Cutter Slipping",
+    "description": "Machine cutter slipping during operation.",
+    "status": "open",
+    "solvedAt": null,
+    "timestamp": "2026-06-05T08:00:00.000Z"
+  }
+]
