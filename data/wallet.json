@@ -138,12 +138,5 @@
     "personOrPurpose": "WATER",
     "amount": 150,
     "timestamp": "2026-06-09T12:13:19.822Z"
-  },
-  {
-    "id": "wlt_h0apy5k052n76",
-    "type": "out",
-    "personOrPurpose": "NEW OPERATORS",
-    "amount": 1000,
-    "timestamp": "2026-06-10T16:13:42.658Z"
   }
 ]
