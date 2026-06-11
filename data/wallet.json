@@ -159,5 +159,12 @@
     "personOrPurpose": "WATER",
     "amount": 150,
     "timestamp": "2026-06-11T13:17:03.113Z"
+  },
+  {
+    "id": "wlt_84qq4y3qj0421",
+    "type": "out",
+    "personOrPurpose": "FRAME TAPE",
+    "amount": 250,
+    "timestamp": "2026-06-11T13:17:45.950Z"
   }
 ]
