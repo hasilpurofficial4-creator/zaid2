@@ -152,5 +152,12 @@
     "personOrPurpose": "ZAHID SAHAB",
     "amount": 1000,
     "timestamp": "2026-06-11T13:16:42.073Z"
+  },
+  {
+    "id": "wlt_8mram3tbtij6n",
+    "type": "out",
+    "personOrPurpose": "WATER",
+    "amount": 150,
+    "timestamp": "2026-06-11T13:17:03.113Z"
   }
 ]
