@@ -64,10 +64,12 @@
   },
   {
     "id": "mph8ks24fxmga",
-    "name": "MB ZEBRA TILLA",
+    "name": "TILLA",
     "number": "",
-    "quantity": 1280,
-    "status": "available"
+    "quantity": "1280",
+    "status": "available",
+    "model": "MB ZEBRA ",
+    "person": ""
   },
   {
     "id": "mpjt3fnva36ae",
