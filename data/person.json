@@ -10,5 +10,11 @@
     "personName": "SHERRY",
     "action": "enter",
     "timestamp": "2026-06-10T15:00:00.000Z"
+  },
+  {
+    "id": "prs_cvvpg6mppa02c",
+    "personName": "SHERRY",
+    "action": "exit",
+    "timestamp": "2026-06-11T05:43:51.828Z"
   }
 ]
