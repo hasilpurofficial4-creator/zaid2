@@ -26,10 +26,12 @@
   },
   {
     "id": "mph8nx0rpuczf",
-    "name": "GOLDEN COLY SEQUENCE CD",
+    "name": "SEQUENCE CD",
     "number": "",
-    "quantity": 27,
-    "status": "available"
+    "quantity": "27",
+    "status": "available",
+    "model": "GOLDEN COLY ",
+    "person": ""
   },
   {
     "id": "mph8mzg1vwnzt",
