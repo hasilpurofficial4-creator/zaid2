@@ -47,7 +47,8 @@ async function createSocket() {
   // Get version with fallback
   let version;
   try {
-    const v = await baileys.fetchLatestBaileysVersion();
+    const baileysMod = await import('@whiskeysockets/baileys');
+    const v = await baileysMod.fetchLatestBaileysVersion();
     version = v.version;
   } catch {
     version = [2, 3000, 1021221121];

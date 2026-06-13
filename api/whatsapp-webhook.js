@@ -34,7 +34,11 @@ module.exports = async function handler(req, res) {
     }
 
     // Forward to whatsapp-send handler for processing
-    const sendRes = await fetch(`${req.headers.host ? 'https://' + req.headers.host : 'http://localhost'}/api/whatsapp-send`, {
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : (req.headers.host ? 'https://' + req.headers.host : 'http://localhost:3000');
+
+    const sendRes = await fetch(`${baseUrl}/api/whatsapp-send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ command: text, senderJid: from })
