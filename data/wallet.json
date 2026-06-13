@@ -176,9 +176,9 @@
   },
   {
     "id": "wlt_oeo86r5zmae0d",
-    "type": "out",
+    "type": "in",
     "personOrPurpose": "ZAHID MAHMOOD",
-    "amount": 1000,
+    "amount": "1000",
     "timestamp": "2026-06-13T09:51:03.853Z"
   }
 ]
