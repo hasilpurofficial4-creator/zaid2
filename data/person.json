@@ -40,5 +40,11 @@
     "personName": "ADNAN",
     "action": "enter",
     "timestamp": "2026-06-12T03:00:00.000Z"
+  },
+  {
+    "id": "prs_otlfi2onuaftu",
+    "personName": "ADNAN",
+    "action": "exit",
+    "timestamp": "2026-06-13T09:41:47.881Z"
   }
 ]
