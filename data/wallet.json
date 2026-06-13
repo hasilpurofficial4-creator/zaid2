@@ -159,5 +159,12 @@
     "personOrPurpose": "FRAME TAPE",
     "amount": 250,
     "timestamp": "2026-06-11T13:17:45.950Z"
+  },
+  {
+    "id": "wlt_efz0vfik5yy6b",
+    "type": "out",
+    "personOrPurpose": "ELECTRICIAN",
+    "amount": 1400,
+    "timestamp": "2026-06-13T09:48:35.076Z"
   }
 ]
