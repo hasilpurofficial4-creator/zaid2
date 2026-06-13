@@ -54,11 +54,11 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
   // Send WhatsApp notification
   if (entryData) {
     try {
-      const baseUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : 'http://localhost:3000';
+      const botUrl = process.env.RENDER_WA_URL;
+      if (!botUrl) { console.log('RENDER_WA_URL not set - skipping WhatsApp'); return; }
+      const targetUrl = botUrl.replace(/\/$/, '');
 
-      const waRes = await fetch(`${baseUrl}/api/whatsapp-send`, {
+      const waRes = await fetch(`${targetUrl}/api/whatsapp-send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
