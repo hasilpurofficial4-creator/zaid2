@@ -173,5 +173,12 @@
     "personOrPurpose": "MASTER",
     "amount": 1250,
     "timestamp": "2026-06-13T09:49:25.482Z"
+  },
+  {
+    "id": "wlt_oeo86r5zmae0d",
+    "type": "out",
+    "personOrPurpose": "ZAHID MAHMOOD",
+    "amount": 1000,
+    "timestamp": "2026-06-13T09:51:03.853Z"
   }
 ]
