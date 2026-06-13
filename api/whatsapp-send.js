@@ -187,6 +187,19 @@ module.exports = async function handler(req, res) {
     const { section, entry, command, senderJid } = typeof req.body === 'string'
       ? JSON.parse(req.body) : req.body;
 
+    // Validate WA_SESSION_ID env var (security check - only send if env var matches linked session)
+    const envSessionId = process.env.WA_SESSION_ID;
+    if (envSessionId) {
+      const config = await loadConfig();
+      if (!config.sessionId || config.sessionId !== envSessionId) {
+        console.log('WA_SESSION_ID mismatch - WhatsApp notifications disabled until env var matches linked session');
+        return res.status(200).json({
+          success: false,
+          error: 'Session ID mismatch - re-link WhatsApp or update WA_SESSION_ID env var'
+        });
+      }
+    }
+
     // Handle command responses
     if (command) {
       return await handleCommand(command, senderJid, res);

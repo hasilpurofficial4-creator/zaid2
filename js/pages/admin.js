@@ -181,9 +181,7 @@ showPasswordGate(() => {
   initWhatsAppStatus();
 });
 
-/* ========== WhatsApp Integration ========== */
-
-let waPollTimer = null;
+/* ========== WhatsApp Integration (Pairing Code) ========== */
 
 function waHeaders() {
   return {
@@ -192,12 +190,16 @@ function waHeaders() {
   };
 }
 
+const WA_ALL_SECTIONS = [
+  'wa-status-section','wa-pair-section','wa-code-section',
+  'wa-loading-section','wa-linked-section','wa-error-section'
+];
+
 function showWaSection(...ids) {
-  ['wa-status-section','wa-qr-section','wa-loading-section','wa-linked-section','wa-error-section']
-    .forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = ids.includes(id) ? '' : 'none';
-    });
+  WA_ALL_SECTIONS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = ids.includes(id) ? '' : 'none';
+  });
 }
 
 async function initWhatsAppStatus() {
@@ -234,6 +236,7 @@ window.openWhatsAppModal = async function() {
   document.getElementById('wa-status-label').textContent = 'Checking...';
   document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-checking';
   document.getElementById('wa-phone-info').style.display = 'none';
+  document.getElementById('wa-session-info').style.display = 'none';
   document.getElementById('wa-error-section').style.display = 'none';
 
   await checkWhatsAppStatus();
@@ -242,7 +245,6 @@ window.openWhatsAppModal = async function() {
 window.closeWhatsAppModal = function() {
   const modal = document.getElementById('wa-modal');
   if (modal) modal.style.display = 'none';
-  if (waPollTimer) { clearTimeout(waPollTimer); waPollTimer = null; }
 };
 
 async function checkWhatsAppStatus() {
@@ -251,20 +253,33 @@ async function checkWhatsAppStatus() {
     const data = await res.json();
 
     if (data.linked) {
-      // Show linked state
       document.getElementById('wa-status-label').textContent = 'Connected';
       document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-linked';
       document.getElementById('wa-phone-info').style.display = 'flex';
       document.getElementById('wa-phone-number').textContent = '+' + (data.phone || 'Unknown');
       document.getElementById('wa-link-btn').style.display = 'none';
       document.getElementById('wa-unlink-btn').style.display = 'inline-flex';
+
+      // Show session ID if available
+      if (data.sessionId) {
+        document.getElementById('wa-session-info').style.display = 'flex';
+        document.getElementById('wa-session-id').textContent = data.sessionId;
+      }
+
       showWaSection('wa-status-section', 'wa-linked-section');
+
+      // Show session ID in linked section too
+      if (data.sessionId) {
+        document.getElementById('wa-linked-session').style.display = 'block';
+        document.getElementById('wa-session-box').textContent = data.sessionId;
+      }
+
       updateWaButton(true);
     } else {
-      // Show not-linked state
       document.getElementById('wa-status-label').textContent = 'Not Connected';
       document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-unlinked';
       document.getElementById('wa-phone-info').style.display = 'none';
+      document.getElementById('wa-session-info').style.display = 'none';
       document.getElementById('wa-link-btn').style.display = 'inline-flex';
       document.getElementById('wa-unlink-btn').style.display = 'none';
       showWaSection('wa-status-section');
@@ -278,21 +293,36 @@ async function checkWhatsAppStatus() {
   }
 }
 
-window.linkWhatsApp = async function() {
+// "Link WhatsApp" button shows the phone input pair section
+window.linkWhatsApp = function() {
+  showWaSection('wa-pair-section');
+  document.getElementById('wa-phone-input').value = '';
+  document.getElementById('wa-phone-input').focus();
+  document.getElementById('wa-error-section').style.display = 'none';
+};
+
+// Request pairing code from the API
+window.requestPairingCode = async function() {
+  const phone = document.getElementById('wa-phone-input').value.trim().replace(/\D/g, '');
+  if (!phone || phone.length < 10) {
+    showWaSection('wa-pair-section', 'wa-error-section');
+    document.getElementById('wa-error-text').textContent = 'Please enter a valid phone number with country code (e.g. 923001234567)';
+    return;
+  }
+
   // Show loading
   showWaSection('wa-loading-section');
-  document.getElementById('wa-loading-text').textContent = 'Connecting to WhatsApp servers... Please wait.';
-  document.getElementById('wa-link-btn').style.display = 'none';
+  document.getElementById('wa-loading-text').textContent = 'Requesting pairing code... Please wait.';
   document.getElementById('wa-error-section').style.display = 'none';
 
   try {
-    // Use AbortController for a 58s timeout (API has 60s limit)
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 58000);
 
-    const res = await fetch('/api/whatsapp?action=link', {
+    const res = await fetch('/api/whatsapp?action=pair', {
       method: 'POST',
       headers: waHeaders(),
+      body: JSON.stringify({ phone }),
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -304,95 +334,78 @@ window.linkWhatsApp = async function() {
 
     const data = await res.json();
 
-    if (data.status === 'qr') {
-      // Show QR code
-      showWaSection('wa-qr-section');
-      document.getElementById('wa-qr-image').src = data.qr;
-      // Start polling for connection
-      pollWhatsAppLink();
-    } else if (data.status === 'linked') {
-      // Already linked
+    if (data.status === 'linked') {
+      // Successfully paired!
       showWaSection('wa-status-section', 'wa-linked-section');
       document.getElementById('wa-status-label').textContent = 'Connected';
       document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-linked';
       document.getElementById('wa-phone-info').style.display = 'flex';
-      document.getElementById('wa-phone-number').textContent = '+' + (data.phone || 'Unknown');
+      document.getElementById('wa-phone-number').textContent = '+' + (data.phone || phone);
       document.getElementById('wa-unlink-btn').style.display = 'inline-flex';
+
+      // Show session ID prominently
+      if (data.sessionId) {
+        document.getElementById('wa-linked-session').style.display = 'block';
+        document.getElementById('wa-session-box').textContent = data.sessionId;
+        document.getElementById('wa-session-info').style.display = 'flex';
+        document.getElementById('wa-session-id').textContent = data.sessionId;
+      }
+
       updateWaButton(true);
-      showToast('WhatsApp', 'WhatsApp linked successfully!', 'success');
-    } else if (data.status === 'error') {
-      // API returned an error
+      showToast('WhatsApp Linked!', 'Session ID: ' + (data.sessionId || 'N/A') + ' — Add as WA_SESSION_ID env var on Vercel', 'success');
+
+    } else if (data.pairingCode && data.status !== 'timeout') {
+      // Got pairing code but connection not yet established (shouldn't happen with current API, but handle it)
+      showWaSection('wa-code-section');
+      document.getElementById('wa-code-display').textContent = data.pairingCode;
+      document.getElementById('wa-waiting-text').textContent = 'Waiting for code entry...';
+
+      // If there's also a message about error/timeout
+      if (data.status === 'error' || data.status === 'timeout') {
+        showWaSection('wa-code-section', 'wa-error-section');
+        document.getElementById('wa-error-text').textContent = data.message || 'Pairing timed out. Please try again.';
+        document.getElementById('wa-link-btn').style.display = 'inline-flex';
+      }
+
+    } else if (data.status === 'error' || data.status === 'timeout') {
       showWaSection('wa-status-section', 'wa-error-section');
-      document.getElementById('wa-error-text').textContent = data.message || 'WhatsApp service error. Please try again.';
+      document.getElementById('wa-error-text').textContent = data.message || 'Pairing failed. Please try again.';
       document.getElementById('wa-link-btn').style.display = 'inline-flex';
+
     } else {
-      // Timeout or unknown status
       showWaSection('wa-status-section', 'wa-error-section');
-      document.getElementById('wa-error-text').textContent = data.message || 'Failed to generate QR code. Please try again.';
+      document.getElementById('wa-error-text').textContent = 'Unexpected response. Please try again.';
       document.getElementById('wa-link-btn').style.display = 'inline-flex';
     }
+
   } catch (err) {
     showWaSection('wa-status-section', 'wa-error-section');
     const msg = err.name === 'AbortError'
-      ? 'Request timed out. The WhatsApp service may be busy. Please try again.'
-      : 'Connection error: ' + err.message;
+      ? 'Request timed out (58s). Please try again.'
+      : 'Error: ' + err.message;
     document.getElementById('wa-error-text').textContent = msg;
     document.getElementById('wa-link-btn').style.display = 'inline-flex';
   }
 };
 
-function pollWhatsAppLink() {
-  // Poll status every 3 seconds for up to 55 seconds
-  let attempts = 0;
-  const maxAttempts = 18;
-
-  // Show QR section with "waiting" message below the QR
-  function updatePollStatus(seconds) {
-    const hint = document.querySelector('.wa-qr-hint');
-    if (hint) {
-      hint.textContent = 'Waiting for scan... ' + seconds + 's elapsed — scan before it expires!';
-      hint.style.color = seconds > 30 ? 'var(--warning)' : '';
-    }
+// Copy session ID to clipboard
+window.copySessionId = function() {
+  const box = document.getElementById('wa-session-box');
+  if (box && box.textContent) {
+    navigator.clipboard.writeText(box.textContent).then(() => {
+      showToast('Copied!', 'Session ID copied to clipboard', 'success');
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = box.textContent;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('Copied!', 'Session ID copied to clipboard', 'success');
+    });
   }
-
-  async function poll() {
-    attempts++;
-    try {
-      const res = await fetch('/api/whatsapp?action=status', { headers: waHeaders() });
-      const data = await res.json();
-
-      if (data.linked) {
-        // Successfully linked!
-        showWaSection('wa-status-section', 'wa-linked-section');
-        document.getElementById('wa-status-label').textContent = 'Connected';
-        document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-linked';
-        document.getElementById('wa-phone-info').style.display = 'flex';
-        document.getElementById('wa-phone-number').textContent = '+' + (data.phone || 'Unknown');
-        document.getElementById('wa-unlink-btn').style.display = 'inline-flex';
-        updateWaButton(true);
-        showToast('WhatsApp', 'WhatsApp linked successfully! Notifications are now active.', 'success');
-        return;
-      }
-    } catch { /* continue polling */ }
-
-    if (attempts < maxAttempts) {
-      updatePollStatus(attempts * 3);
-      waPollTimer = setTimeout(poll, 3000);
-    } else {
-      // Reset QR hint text
-      const hint = document.querySelector('.wa-qr-hint');
-      if (hint) {
-        hint.textContent = 'Open WhatsApp → Settings → Linked Devices → Link a Device';
-        hint.style.color = '';
-      }
-      showWaSection('wa-status-section', 'wa-error-section');
-      document.getElementById('wa-error-text').textContent = 'QR code expired or not scanned in time. Please try again.';
-      document.getElementById('wa-link-btn').style.display = 'inline-flex';
-    }
-  }
-
-  waPollTimer = setTimeout(poll, 3000);
-}
+};
 
 window.unlinkWhatsApp = async function() {
   if (!confirm('Are you sure you want to unlink WhatsApp? Notifications will stop.')) return;

@@ -302,21 +302,50 @@
             <span class="wa-phone-label">Linked Phone:</span>
             <span class="wa-phone-number" id="wa-phone-number"></span>
           </div>
+          <div class="wa-session-info" id="wa-session-info" style="display:none;">
+            <span class="wa-session-label">Session ID:</span>
+            <span class="wa-session-id" id="wa-session-id"></span>
+          </div>
         </div>
 
-        <!-- QR Code Section -->
-        <div class="wa-qr-section" id="wa-qr-section" style="display:none;">
-          <p class="wa-qr-instruction">Scan this QR code with your WhatsApp app:</p>
-          <div class="wa-qr-container">
-            <img id="wa-qr-image" src="" alt="QR Code" class="wa-qr-image">
+        <!-- Phone Input Section (shown when not linked) -->
+        <div class="wa-pair-section" id="wa-pair-section" style="display:none;">
+          <p class="wa-pair-instruction">Enter the WhatsApp phone number to link (with country code, no + sign):</p>
+          <div class="wa-pair-input-row">
+            <input type="tel" class="form-input wa-pair-input" id="wa-phone-input" placeholder="e.g. 923001234567" maxlength="15" autocomplete="tel">
+            <button class="btn btn-success btn-sm wa-pair-btn" id="wa-get-code-btn" onclick="requestPairingCode()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Get Code
+            </button>
           </div>
-          <p class="wa-qr-hint">Open WhatsApp &rarr; Settings &rarr; Linked Devices &rarr; Link a Device</p>
+          <p class="wa-pair-hint">Use the phone number of the WhatsApp account you want to link for notifications.</p>
+        </div>
+
+        <!-- Pairing Code Display Section -->
+        <div class="wa-code-section" id="wa-code-section" style="display:none;">
+          <p class="wa-code-instruction">Enter this code in WhatsApp on the linked phone:</p>
+          <div class="wa-code-display" id="wa-code-display">--------</div>
+          <div class="wa-code-steps">
+            <p><strong>Steps on WhatsApp:</strong></p>
+            <ol>
+              <li>Open WhatsApp on the phone</li>
+              <li>Go to <strong>Settings &rarr; Linked Devices</strong></li>
+              <li>Tap <strong>Link a Device</strong></li>
+              <li>Tap <strong>Link with phone number instead</strong></li>
+              <li>Select country <strong>Pakistan (+92)</strong></li>
+              <li>Enter the code shown above</li>
+            </ol>
+          </div>
+          <div class="wa-waiting" id="wa-waiting">
+            <div class="wa-loading-spinner-sm"></div>
+            <span id="wa-waiting-text">Waiting for you to enter the code...</span>
+          </div>
         </div>
 
         <!-- Loading Section -->
         <div class="wa-loading-section" id="wa-loading-section" style="display:none;">
           <div class="wa-loading-spinner-lg"></div>
-          <p class="wa-loading-text" id="wa-loading-text">Generating QR code...</p>
+          <p class="wa-loading-text" id="wa-loading-text">Connecting...</p>
         </div>
 
         <!-- Linked Info Section -->
@@ -325,7 +354,16 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#25D366" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <p class="wa-linked-text">WhatsApp is connected!</p>
-          <p class="wa-linked-sub">Notifications will be sent to:<br><strong>+92 324 4643714</strong> &amp; <strong>+92 371 1286436</strong></p>
+          <p class="wa-linked-sub">Notifications sent to:<br><strong>+92 324 4643714</strong> &amp; <strong>+92 371 1286436</strong></p>
+          <div class="wa-linked-session" id="wa-linked-session" style="display:none;">
+            <p class="wa-session-title">Your Session ID (add as Vercel env var <code>WA_SESSION_ID</code>):</p>
+            <div class="wa-session-box" id="wa-session-box"></div>
+            <button class="btn btn-primary btn-sm wa-copy-btn" onclick="copySessionId()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy Session ID
+            </button>
+            <p class="wa-session-hint">The session ID was also sent to your paired WhatsApp number.</p>
+          </div>
           <div class="wa-commands-info">
             <p class="wa-commands-title">Available SMS Commands:</p>
             <div class="wa-commands-grid">
