@@ -187,5 +187,12 @@
     "personOrPurpose": "test",
     "amount": 1000,
     "timestamp": "2026-06-14T20:01:48.555Z"
+  },
+  {
+    "id": "wlt_jl9kw3784mx1e",
+    "type": "out",
+    "personOrPurpose": "test",
+    "amount": 1000,
+    "timestamp": "2026-06-14T20:09:13.433Z"
   }
 ]
