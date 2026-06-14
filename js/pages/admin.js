@@ -22,41 +22,45 @@ function buildWhatsAppMessage(section, entry) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
-  const line = '------------------------------';
+  const line = '\u2550'.repeat(28);
 
   let title = '', body = '';
 
   switch (section) {
     case 'items':
-      title = '*[ NEW ITEM ADDED ]*';
-      body = `> *Name:* ${entry.name}\n> *Serial:* ${entry.number || 'N/A'}\n> *Person:* ${entry.person || 'N/A'}\n> *Model:* ${entry.model || 'N/A'}`;
+      title = '\u25C6 \uD83D\uDCE6 *NEW ITEM ADDED* \uD83D\uDCE6 \u25C6';
+      body = `> \uD83C\uDFF7 *Name:* ${entry.name}\n> \uD83D\uDD22 *Serial:* ${entry.number || 'N/A'}\n> \uD83D\uDC64 *Person:* ${entry.person || 'N/A'}\n> \uD83D\uDCCB *Model:* ${entry.model || 'N/A'}`;
       break;
     case 'wallet':
-      title = entry.type === 'in' ? '*[ MONEY RECEIVED ]*' : '*[ MONEY SPENT ]*';
-      body = `> ${entry.type === 'in' ? '*From:*' : '*For:*'} ${entry.personOrPurpose}\n> *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
+      title = entry.type === 'in'
+        ? '\u25C6 \uD83D\uDCB0 *MONEY RECEIVED* \uD83D\uDCB0 \u25C6'
+        : '\u25C6 \uD83D\uDCB8 *MONEY SPENT* \uD83D\uDCB8 \u25C6';
+      body = `> ${entry.type === 'in' ? '\uD83D\uDCE5 *From:*' : '\uD83D\uDCE4 *For:*'} ${entry.personOrPurpose}\n> \uD83D\uDCB5 *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
       break;
     case 'person':
-      title = '*[ WORKER ADDED ]*';
-      body = `> *Name:* ${entry.personName}\n> *Action:* Entry Logged`;
+      title = '\u25C6 \uD83D\uDC77 *WORKER ADDED* \uD83D\uDC77 \u25C6';
+      body = `> \uD83D\uDC64 *Name:* ${entry.personName}\n> \u2705 *Action:* Entry Logged`;
       break;
     case 'maintenance':
-      title = '*[ MAINTENANCE ENTRY ]*';
-      body = `> *Type:* ${entry.category}\n> *Subject:* ${entry.subject}\n> *Desc:* ${entry.description || 'N/A'}`;
+      title = '\u25C6 \uD83D\uDD27 *MAINTENANCE ENTRY* \uD83D\uDD27 \u25C6';
+      body = `> \uD83D\uDCCC *Type:* ${entry.category}\n> \uD83D\uDCDD *Subject:* ${entry.subject}\n> \uD83D\uDCC4 *Desc:* ${entry.description || 'N/A'}`;
       break;
     case 'samples':
-      title = entry.type === 'in' ? '*[ SAMPLE RECEIVED ]*' : '*[ SAMPLE SENT ]*';
-      body = `> *Person:* ${entry.personName}\n> *Program:* ${entry.program || 'N/A'}\n> *Pieces:* ${entry.pieces || 'N/A'}`;
+      title = entry.type === 'in'
+        ? '\u25C6 \uD83E\uDDEA *SAMPLE RECEIVED* \uD83E\uDDEA \u25C6'
+        : '\u25C6 \uD83E\uDDEA *SAMPLE SENT* \uD83E\uDDEA \u25C6';
+      body = `> \uD83D\uDC64 *Person:* ${entry.personName}\n> \uD83D\uDCCB *Program:* ${entry.program || 'N/A'}\n> \uD83D\uDCE6 *Pieces:* ${entry.pieces || 'N/A'}`;
       break;
     case 'clipping':
-      title = '*[ CLIPPING ENTRY ]*';
-      body = `> *Clipper:* ${entry.clipperName}\n> *Size:* ${entry.size}\n> *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
+      title = '\u25C6 \u2702 *CLIPPING ENTRY* \u2702 \u25C6';
+      body = `> \uD83D\uDC64 *Clipper:* ${entry.clipperName}\n> \uD83D\uDCD0 *Size:* ${entry.size}\n> \uD83D\uDCCB *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
       break;
     default:
-      title = `*[ NEW: ${section.toUpperCase()} ]*`;
+      title = `\u25C6 *NEW: ${section.toUpperCase()}* \u25C6`;
       body = `> ${JSON.stringify(entry)}`;
   }
 
-  return `${title}\n${line}\n${body}\n${line}\n*ZAID BWP STOCK MANAGER*\n${dateStr} | ${timeStr}`;
+  return `${title}\n${line}\n${body}\n${line}\n\u2B50 *ZAID BWP DEVELOPER* \u2B50\n\uD83D\uDCC5 ${dateStr}  \u23F0 ${timeStr}`;
 }
 
 function sendWhatsAppNotify(section, entry) {
