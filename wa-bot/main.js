@@ -300,8 +300,19 @@ app.get('/', (req, res) => {
 // Start HTTP server
 app.listen(PORT, () => {
   console.log(`[HTTP] Dashboard running on port ${PORT}`);
-  console.log(`[HTTP] Open: http://localhost:${PORT}`);
 });
+
+// Keep-alive ping (prevent Render free tier from sleeping)
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutes
+setInterval(async () => {
+  try {
+    const res = await fetch(`https://zaid2.onrender.com/api/health`);
+    const data = await res.json();
+    console.log(`[KEEP-ALIVE] Status: ${data.status}, Uptime: ${Math.round(data.uptime)}s`);
+  } catch (e) {
+    console.log(`[KEEP-ALIVE] Ping failed: ${e.message}`);
+  }
+}, KEEP_ALIVE_INTERVAL);
 
 // ==================== START BOT ====================
 console.log('[INIT] Starting ZAID BWP Bot...');
