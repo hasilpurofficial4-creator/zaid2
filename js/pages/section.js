@@ -204,83 +204,135 @@ if (downloadDropdown) {
   downloadDropdown.setAttribute('data-section', page);
 }
 
-// Build section summary for WhatsApp
-function buildSectionSummary(section, data) {
+// Format timestamp for WhatsApp
+function fmtTs(ts) {
+  if (!ts) return 'N/A';
+  const d = new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  let h = d.getHours(); const m = String(d.getMinutes()).padStart(2,'0');
+  const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${h}:${m} ${ap}`;
+}
+
+// Build all entries with full details for WhatsApp
+function buildAllEntries(section, data) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
-  const line = '══════════════════════════════';
-  let title = '', body = '';
+  const sep = '══════════════════════════════';
+  const div = '──────────────────────────────';
+
+  let title = '';
+  let summary = '';
+  let entries = '';
 
   switch (section) {
     case 'items': {
-      const total = data.length;
       const totalQty = data.reduce((a, e) => a + (Number(e.quantity) || 1), 0);
+      const avail = data.filter(e => e.status === 'available').length;
       const inUse = data.filter(e => e.status === 'in-use').length;
-      const available = data.filter(e => e.status === 'available').length;
-      const maint = data.filter(e => e.status === 'maintenance').length;
-      const persons = [...new Set(data.map(e => e.person).filter(Boolean))];
-      title = '📦 ✦ *ITEMS SUMMARY* ✦ 📦';
-      body = `📦 *Total Items:* ${total}\n🔢 *Total Quantity:* ${totalQty}\n✅ *Available:* ${available}\n📤 *In Use:* ${inUse}\n🔧 *Maintenance:* ${maint}`;
-      if (persons.length > 0) body += `\n👥 *Assigned To:* ${persons.length} persons`;
+      title = `📦 ✦ *ALL ITEMS (${data.length})* ✦ 📦`;
+      summary = `📦 *Items:* ${data.length} | 🔢 *Qty:* ${totalQty} | ✅ *Avail:* ${avail} | 📤 *In Use:* ${inUse}`;
+      entries = data.map((e, i) => [
+        `${i+1}. 📋 *${e.name || 'N/A'}*`,
+        `  🔢 Serial: ${e.number || 'N/A'}`,
+        `  👤 Person: ${e.person || 'N/A'}`,
+        `  📐 Model: ${e.model || 'N/A'}`,
+        `  🔢 Qty: ${e.quantity || 1}`,
+        `  📊 Status: ${e.status || 'available'}`,
+        `  🕐 ${fmtTs(e.timestamp)}`
+      ].join('\n')).join(`\n${div}\n`);
       break;
     }
     case 'wallet': {
       const totalIn = data.filter(e => e.type === 'in').reduce((a, e) => a + Number(e.amount), 0);
       const totalOut = data.filter(e => e.type === 'out').reduce((a, e) => a + Number(e.amount), 0);
-      const balance = totalIn - totalOut;
-      const balSign = balance >= 0 ? '+' : '-';
-      const balLabel = balance >= 0 ? '✅ POSITIVE' : '⚠️ NEGATIVE';
-      title = '💰 ✦ *WALLET SUMMARY* ✦ 💰';
-      body = `📥 *Total Received:* Rs. ${totalIn.toLocaleString()}\n📤 *Total Spent:* Rs. ${totalOut.toLocaleString()}\n🏦 *Balance:* ${balSign}Rs. ${Math.abs(balance).toLocaleString()} (${balLabel})\n📊 *Entries:* ${data.length}`;
+      const bal = totalIn - totalOut;
+      const bs = bal >= 0 ? '+' : '-';
+      const bl = bal >= 0 ? '✅' : '⚠️';
+      title = `💰 ✦ *ALL WALLET ENTRIES (${data.length})* ✦ 💰`;
+      summary = `📥 *Received:* Rs. ${totalIn.toLocaleString()} | 📤 *Spent:* Rs. ${totalOut.toLocaleString()} | 🏦 *Balance:* ${bs}Rs. ${Math.abs(bal).toLocaleString()} ${bl}`;
+      entries = data.map((e, i) => [
+        `${i+1}. ${e.type === 'in' ? '📥' : '📤'} *${e.type === 'in' ? 'RECEIVED' : 'SPENT'}*`,
+        `  👤 ${e.type === 'in' ? 'From' : 'For'}: ${e.personOrPurpose || 'N/A'}`,
+        `  💵 Amount: Rs. ${Number(e.amount).toLocaleString()}`,
+        `  🕐 ${fmtTs(e.timestamp)}`
+      ].join('\n')).join(`\n${div}\n`);
       break;
     }
     case 'person': {
-      const month = now.getMonth();
-      const year = now.getFullYear();
+      const month = now.getMonth(), year = now.getFullYear();
       const monthName = now.toLocaleString('default', { month: 'long' });
       const workers = [...new Set(data.map(e => e.personName).filter(Boolean))].sort();
-      let totalHoursAll = 0, totalDaysAll = 0, totalAbsentsAll = 0;
-      const workerLines = workers.map(name => {
+      let thAll = 0, tdAll = 0, taAll = 0;
+      workers.forEach(n => {
+        const h = calculateHours(data, n, month, year);
+        const a = getAbsents(data, n, month, year);
+        thAll += h.totalHours; tdAll += h.daysWorked; taAll += a;
+      });
+      title = `👷 ✦ *ALL PERSON ENTRIES (${data.length})* ✦ 👷`;
+      summary = `📅 *${monthName} ${year}* | 👥 *Workers:* ${workers.length} | ⏱️ *Hours:* ${Math.round(thAll*10)/10}h | 📆 *Days:* ${tdAll} | ❌ *Absents:* ${taAll}`;
+      // Group entries by worker
+      entries = workers.map(name => {
+        const wEntries = data.filter(e => e.personName === name).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
         const hours = calculateHours(data, name, month, year);
         const absents = getAbsents(data, name, month, year);
-        totalHoursAll += hours.totalHours;
-        totalDaysAll += hours.daysWorked;
-        totalAbsentsAll += absents;
-        return `  👤 ${name}: ⏱️ ${hours.totalHours}h | 📅 ${hours.daysWorked}d present | ❌ ${absents} absents`;
-      }).join('\n');
-      title = '👷 ✦ *PERSON SUMMARY* ✦ 👷';
-      body = `📅 *Month:* ${monthName} ${year}\n👥 *Workers:* ${workers.length}\n⏱️ *Total Hours:* ${Math.round(totalHoursAll * 10) / 10}h\n📆 *Total Days Worked:* ${totalDaysAll}\n❌ *Total Absents:* ${totalAbsentsAll}\n\n👷 *Per Worker:*\n${workerLines}`;
+        const entryLines = wEntries.map(e => `  ${e.action === 'enter' ? '📥' : '📤'} ${e.action === 'enter' ? 'Entry' : 'Exit'}: ${fmtTs(e.timestamp)}`).join('\n');
+        return [
+          `👤 *${name}* — ⏱️ ${hours.totalHours}h | 📆 ${hours.daysWorked}d | ❌ ${absents} absents`,
+          entryLines
+        ].join('\n');
+      }).join(`\n${div}\n`);
       break;
     }
     case 'maintenance': {
-      const total = data.length;
       const open = data.filter(e => e.status !== 'solved').length;
-      const solved = total - open;
-      title = '🔧 ✦ *MAINTENANCE SUMMARY* ✦ 🔧';
-      body = `📊 *Total Issues:* ${total}\n🔴 *Open:* ${open}\n✅ *Solved:* ${solved}`;
+      const solved = data.length - open;
+      title = `🔧 ✦ *ALL MAINTENANCE (${data.length})* ✦ 🔧`;
+      summary = `📊 *Total:* ${data.length} | 🔴 *Open:* ${open} | ✅ *Solved:* ${solved}`;
+      entries = data.map((e, i) => [
+        `${i+1}. ${e.status === 'solved' ? '✅' : '🔴'} *${e.subject || 'N/A'}*`,
+        `  🔧 Type: ${e.category || 'N/A'}`,
+        `  📄 Desc: ${e.description || 'N/A'}`,
+        `  📊 Status: ${e.status || 'open'}`,
+        `  🕐 ${fmtTs(e.timestamp)}`
+      ].join('\n')).join(`\n${div}\n`);
       break;
     }
     case 'samples': {
-      const totalIn = data.filter(e => e.type === 'in').length;
-      const totalOut = data.filter(e => e.type === 'out').length;
-      const totalPieces = data.reduce((a, e) => a + (Number(e.pieces) || 0), 0);
-      title = '🧪 ✦ *SAMPLES SUMMARY* ✦ 🧪';
-      body = `📊 *Total Entries:* ${data.length}\n📥 *Received (In):* ${totalIn}\n📤 *Sent (Out):* ${totalOut}\n🔢 *Total Pieces:* ${totalPieces}`;
+      const tIn = data.filter(e => e.type === 'in').length;
+      const tOut = data.filter(e => e.type === 'out').length;
+      const tp = data.reduce((a, e) => a + (Number(e.pieces) || 0), 0);
+      title = `🧪 ✦ *ALL SAMPLES (${data.length})* ✦ 🧪`;
+      summary = `📊 *Entries:* ${data.length} | 📥 *In:* ${tIn} | 📤 *Out:* ${tOut} | 🔢 *Pieces:* ${tp}`;
+      entries = data.map((e, i) => [
+        `${i+1}. ${e.type === 'in' ? '📥' : '📤'} *SAMPLE ${e.type === 'in' ? 'RECEIVED' : 'SENT'}*`,
+        `  👤 Person: ${e.personName || 'N/A'}`,
+        `  📋 Program: ${e.program || 'N/A'}`,
+        `  🔢 Pieces: ${e.pieces || 'N/A'}`,
+        `  🕐 ${fmtTs(e.timestamp)}`
+      ].join('\n')).join(`\n${div}\n`);
       break;
     }
     case 'clipping': {
-      const inEntries = data.filter(e => e.type === 'in');
-      const outEntries = data.filter(e => e.type === 'out');
-      const transferEntries = data.filter(e => e.type === 'transfer');
-      let totalSize = 0;
-      inEntries.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) totalSize += n; });
-      let totalTransferred = 0;
-      transferEntries.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) totalTransferred += n; });
-      const totalRupees = totalSize * 12;
-      const remaining = totalRupees - totalTransferred;
-      title = '✂️ ✦ *CLIPPING SUMMARY* ✦ ✂️';
-      body = `✂️ *Total Clippings:* ${inEntries.length + outEntries.length}\n📥 *Clipped In:* ${inEntries.length} (${totalSize} yards)\n📤 *Out for Clipping:* ${outEntries.length}\n💰 *Total Payment:* Rs. ${totalRupees.toLocaleString()} (${totalSize} × 12)\n💸 *Paid/Transferred:* Rs. ${totalTransferred.toLocaleString()} (${transferEntries.length} transfers)\n🏦 *Remaining:* Rs. ${remaining.toLocaleString()}`;
+      const inE = data.filter(e => e.type === 'in');
+      const outE = data.filter(e => e.type === 'out');
+      const trE = data.filter(e => e.type === 'transfer');
+      let tSize = 0; inE.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) tSize += n; });
+      let tTrans = 0; trE.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) tTrans += n; });
+      const tRs = tSize * 12, rem = tRs - tTrans;
+      title = `✂️ ✦ *ALL CLIPPING (${data.length})* ✦ ✂️`;
+      summary = `✂️ *Total:* ${inE.length + outE.length} | 📥 *In:* ${inE.length} (${tSize}yd) | 📤 *Out:* ${outE.length} | 💰 *Pay:* Rs. ${tRs.toLocaleString()} | 💸 *Paid:* Rs. ${tTrans.toLocaleString()} | 🏦 *Rem:* Rs. ${rem.toLocaleString()}`;
+      entries = data.map((e, i) => {
+        const icon = e.type === 'in' ? '📥' : e.type === 'out' ? '📤' : '💸';
+        const label = e.type === 'in' ? 'CLIPPED IN' : e.type === 'out' ? 'OUT FOR CLIPPING' : 'TRANSFER';
+        return [
+          `${i+1}. ${icon} *${label}*`,
+          `  ✂️ ${e.type === 'transfer' ? 'Recipient' : 'Clipper'}: ${e.clipperName || 'N/A'}`,
+          `  ${e.type === 'transfer' ? '💵' : '📏'} ${e.type === 'transfer' ? 'Amount' : 'Size'}: ${e.size || 'N/A'}`,
+          `  🕐 ${fmtTs(e.timestamp)}`
+        ].join('\n');
+      }).join(`\n${div}\n`);
       break;
     }
     default:
@@ -288,7 +340,7 @@ function buildSectionSummary(section, data) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${sep}\n${summary}\n${sep}\n${entries}\n${sep}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${sep}\n🌐 SEE MORE INFO.\n${pageUrl}`;
 }
 
 // Setup WhatsApp send button
@@ -296,7 +348,7 @@ function setupWaSendButton() {
   const btn = document.getElementById('wa-send-btn');
   if (!btn) return;
   btn.addEventListener('click', () => {
-    const msg = buildSectionSummary(page, sectionData);
+    const msg = buildAllEntries(page, sectionData);
     if (!msg) return;
     try {
       navigator.clipboard.writeText(msg).then(() => {
