@@ -114,5 +114,13 @@
     "program": "SH-0-1",
     "pieces": "1",
     "timestamp": "2026-06-06T18:52:53.949Z"
+  },
+  {
+    "id": "smp_efn06vsf1sgvc",
+    "type": "in",
+    "personName": "test person",
+    "program": "program 203",
+    "pieces": "3",
+    "timestamp": "2026-06-14T17:39:44.306Z"
   }
 ]
