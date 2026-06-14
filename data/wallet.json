@@ -187,12 +187,5 @@
     "personOrPurpose": "test",
     "amount": 250,
     "timestamp": "2026-06-14T17:33:23.024Z"
-  },
-  {
-    "id": "wlt_8vmysfpvrupqh",
-    "type": "out",
-    "personOrPurpose": "TEST WHATSAPP API",
-    "amount": 50000,
-    "timestamp": "2026-06-14T17:33:59.518Z"
   }
 ]
