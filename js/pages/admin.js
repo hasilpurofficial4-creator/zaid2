@@ -15,6 +15,62 @@ initTheme();
 
 const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
 
+// ==================== WhatsApp Direct Notify (wa.me) ====================
+const WA_TARGET = '923244643714';
+
+function buildWhatsAppMessage(section, entry) {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
+  const line = '━━━━━━━━━━━━━━━━━━━━━━';
+
+  let title = '', body = '';
+
+  switch (section) {
+    case 'items':
+      title = '📦 𝗡𝗘𝗪 𝗜𝗧𝗘𝗠 𝗔𝗗𝗗𝗘𝗗';
+      body = `🏷️ *Name:* ${entry.name}\n🔢 *Serial:* ${entry.number || 'N/A'}\n👤 *Person:* ${entry.person || 'N/A'}\n📋 *Model:* ${entry.model || 'N/A'}`;
+      break;
+    case 'wallet':
+      title = entry.type === 'in' ? '💰 𝗠𝗢𝗡𝗘𝗬 𝗥𝗘𝗖𝗘𝗜𝗩𝗘𝗗' : '💸 𝗠𝗢𝗡𝗘𝗬 𝗦𝗣𝗘𝗡𝗧';
+      body = `${entry.type === 'in' ? '📥 *From:*' : '📤 *For:'} ${entry.personOrPurpose}\n💵 *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
+      break;
+    case 'person':
+      title = '👷 𝗪𝗢𝗥𝗞𝗘𝗥 𝗔𝗗𝗗𝗘𝗗';
+      body = `👤 *Name:* ${entry.personName}\n📋 *Action:* Entry Logged`;
+      break;
+    case 'maintenance':
+      title = '🔧 𝗠𝗔𝗜𝗡𝗧𝗘𝗡𝗔𝗡𝗖𝗘 𝗘𝗡𝗧𝗥𝗬';
+      body = `📌 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n📄 *Desc:* ${entry.description || 'N/A'}`;
+      break;
+    case 'samples':
+      title = entry.type === 'in' ? '🧪 𝗦𝗔𝗠𝗣𝗟𝗘 𝗥𝗘𝗖𝗘𝗜𝗩𝗘𝗗' : '🧪 𝗦𝗔𝗠𝗣𝗟𝗘 𝗦𝗘𝗡𝗧';
+      body = `👤 *Person:* ${entry.personName}\n📋 *Program:* ${entry.program || 'N/A'}\n📦 *Pieces:* ${entry.pieces || 'N/A'}`;
+      break;
+    case 'clipping':
+      title = '✂️ 𝗖𝗟𝗜𝗣𝗣𝗜𝗡𝗚 𝗘𝗡𝗧𝗥𝗬';
+      body = `👤 *Clipper:* ${entry.clipperName}\n📐 *Size:* ${entry.size}\n📋 *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
+      break;
+    default:
+      title = `📋 *NEW: ${section}*`;
+      body = JSON.stringify(entry, null, 2);
+  }
+
+  const footer = `\n${line}\n🌸 *𝙕𝙖𝙞𝙙 𝘽𝙒𝙋 𝙎𝙩𝙤𝙘𝙠 𝙈𝙖𝙣𝙖𝙜𝙚𝙧* 🌸\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}`;
+
+  return `${title}\n${line}\n${body}${footer}`;
+}
+
+function sendWhatsAppNotify(section, entry) {
+  try {
+    const msg = buildWhatsAppMessage(section, entry);
+    const url = `https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  } catch (e) {
+    console.error('WhatsApp notify error:', e);
+  }
+}
+
 async function loadSection(section) {
   try {
     const data = await fetchSection(section);
@@ -50,19 +106,21 @@ function setupForms() {
   document.getElementById('items-submit')?.addEventListener('click', async () => {
     const name = document.getElementById('items-name').value.trim();
     if (!name) { showToast('Error', 'Item name is required', 'error'); return; }
+    const entryData = {
+      name,
+      number: document.getElementById('items-number').value.trim(),
+      person: document.getElementById('items-person').value.trim(),
+      model: document.getElementById('items-model').value.trim()
+    };
     try {
-      await createEntry('items', {
-        name,
-        number: document.getElementById('items-number').value.trim(),
-        person: document.getElementById('items-person').value.trim(),
-        model: document.getElementById('items-model').value.trim()
-      });
+      await createEntry('items', entryData);
       document.getElementById('items-name').value = '';
       document.getElementById('items-number').value = '';
       document.getElementById('items-person').value = '';
       document.getElementById('items-model').value = '';
       document.getElementById('items-form-panel').classList.remove('active');
       showToast('Success', 'Item added successfully', 'success');
+      sendWhatsAppNotify('items', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -74,16 +132,18 @@ function setupForms() {
     const personOrPurpose = document.getElementById('wallet-person').value.trim();
     const amount = document.getElementById('wallet-amount').value.trim();
     if (!personOrPurpose || !amount) { showToast('Error', 'Please fill all fields', 'error'); return; }
+    const entryData = {
+      type: window.walletType || 'in',
+      personOrPurpose,
+      amount: Number(amount)
+    };
     try {
-      await createEntry('wallet', {
-        type: window.walletType || 'in',
-        personOrPurpose,
-        amount: Number(amount)
-      });
+      await createEntry('wallet', entryData);
       document.getElementById('wallet-person').value = '';
       document.getElementById('wallet-amount').value = '';
       document.getElementById('wallet-form-panel').classList.remove('active');
       showToast('Success', 'Wallet entry added', 'success');
+      sendWhatsAppNotify('wallet', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -95,16 +155,18 @@ function setupForms() {
     const subject = document.getElementById('maintenance-subject').value.trim();
     if (!subject) { showToast('Error', 'Subject is required', 'error'); return; }
     const activeCat = document.querySelector('#maintenance-categories .category-btn.active');
+    const entryData = {
+      category: activeCat?.dataset.cat || 'Issue',
+      subject,
+      description: document.getElementById('maintenance-desc').value.trim()
+    };
     try {
-      await createEntry('maintenance', {
-        category: activeCat?.dataset.cat || 'Issue',
-        subject,
-        description: document.getElementById('maintenance-desc').value.trim()
-      });
+      await createEntry('maintenance', entryData);
       document.getElementById('maintenance-subject').value = '';
       document.getElementById('maintenance-desc').value = '';
       document.getElementById('maintenance-form-panel').classList.remove('active');
       showToast('Success', 'Maintenance entry added', 'success');
+      sendWhatsAppNotify('maintenance', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -115,18 +177,20 @@ function setupForms() {
   document.getElementById('samples-submit')?.addEventListener('click', async () => {
     const person = document.getElementById('samples-person').value.trim();
     if (!person) { showToast('Error', 'Person name is required', 'error'); return; }
+    const entryData = {
+      type: window.samplesType || 'in',
+      personName: person,
+      program: document.getElementById('samples-program').value.trim(),
+      pieces: document.getElementById('samples-pieces').value.trim()
+    };
     try {
-      await createEntry('samples', {
-        type: window.samplesType || 'in',
-        personName: person,
-        program: document.getElementById('samples-program').value.trim(),
-        pieces: document.getElementById('samples-pieces').value.trim()
-      });
+      await createEntry('samples', entryData);
       document.getElementById('samples-person').value = '';
       document.getElementById('samples-program').value = '';
       document.getElementById('samples-pieces').value = '';
       document.getElementById('samples-form-panel').classList.remove('active');
       showToast('Success', 'Sample entry added', 'success');
+      sendWhatsAppNotify('samples', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -137,14 +201,16 @@ function setupForms() {
   document.getElementById('person-submit')?.addEventListener('click', async () => {
     const name = document.getElementById('person-name').value.trim();
     if (!name) { showToast('Error', 'Worker name is required', 'error'); return; }
+    const entryData = {
+      personName: name,
+      action: 'enter'
+    };
     try {
-      await createEntry('person', {
-        personName: name,
-        action: 'enter'
-      });
+      await createEntry('person', entryData);
       document.getElementById('person-name').value = '';
       document.getElementById('person-form-panel').classList.remove('active');
       showToast('Success', `Worker "${name}" added`, 'success');
+      sendWhatsAppNotify('person', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -156,16 +222,18 @@ function setupForms() {
     const clipperName = document.getElementById('clipping-name').value.trim();
     const size = document.getElementById('clipping-size').value.trim();
     if (!clipperName || !size) { showToast('Error', 'Clipper name and size are required', 'error'); return; }
+    const entryData = {
+      type: window.clippingType || 'in',
+      clipperName,
+      size
+    };
     try {
-      await createEntry('clipping', {
-        type: window.clippingType || 'in',
-        clipperName,
-        size
-      });
+      await createEntry('clipping', entryData);
       document.getElementById('clipping-name').value = '';
       document.getElementById('clipping-size').value = '';
       document.getElementById('clipping-form-panel').classList.remove('active');
       showToast('Success', 'Clipping entry added', 'success');
+      sendWhatsAppNotify('clipping', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
