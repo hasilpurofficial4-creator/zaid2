@@ -14,7 +14,10 @@ async function proxyToRender(req, res) {
   const targetUrl = botUrl.replace(/\/$/, '') + req.url;
 
   try {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept': 'application/json'
+    };
     if (req.headers.authorization) {
       headers['Authorization'] = req.headers.authorization;
     }

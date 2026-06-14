@@ -60,7 +60,7 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
 
       const waRes = await fetch(`${targetUrl}/api/whatsapp-send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json' },
         body: JSON.stringify({
           section: sectionName.toLowerCase(),
           entry: entryData
