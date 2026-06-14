@@ -70,5 +70,11 @@
     "personName": "ADNAN",
     "action": "enter",
     "timestamp": "2026-06-14T17:38:41.081Z"
+  },
+  {
+    "id": "prs_ubbrqwi2wx9kj",
+    "personName": "ADNAN",
+    "action": "exit",
+    "timestamp": "2026-06-14T17:38:47.454Z"
   }
 ]
