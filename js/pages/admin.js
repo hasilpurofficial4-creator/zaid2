@@ -22,73 +22,51 @@ function buildWhatsAppMessage(section, entry) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
-  const line = '════════════════════════════';
+  const line = '══════════════════════════════';
 
   let title = '', body = '';
 
   switch (section) {
     case 'items':
-      title = '◆ 📦 *NEW ITEM ADDED* 📦 ◆';
-      body = `> 🏷 *Name:* ${entry.name}\n> 🔢 *Serial:* ${entry.number || 'N/A'}\n> 👤 *Person:* ${entry.person || 'N/A'}\n> 📋 *Model:* ${entry.model || 'N/A'}`;
+      title = '★ ✦ *NEW ITEM ADDED* ✦ ★';
+      body = `➤ *Name:* ${entry.name}\n➤ *Serial:* ${entry.number || 'N/A'}\n➤ *Person:* ${entry.person || 'N/A'}\n➤ *Model:* ${entry.model || 'N/A'}`;
       break;
     case 'wallet':
       title = entry.type === 'in'
-        ? '◆ 💰 *MONEY RECEIVED* 💰 ◆'
-        : '◆ 💸 *MONEY SPENT* 💸 ◆';
-      body = `> ${entry.type === 'in' ? '📥 *From:*' : '📤 *For:*'} ${entry.personOrPurpose}\n> 💵 *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
+        ? '★ ✦ *MONEY RECEIVED* ✦ ★'
+        : '★ ✦ *MONEY SPENT* ✦ ★';
+      body = `${entry.type === 'in' ? '➥ *From:*' : '➥ *For:*'} ${entry.personOrPurpose}\n➥ *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
       break;
     case 'person':
-      title = '◆ 👷 *WORKER ADDED* 👷 ◆';
-      body = `> 👤 *Name:* ${entry.personName}\n> ✅ *Action:* Entry Logged`;
+      title = '★ ✦ *WORKER ADDED* ✦ ★';
+      body = `➤ *Name:* ${entry.personName}\n➤ *Action:* Entry Logged`;
       break;
     case 'maintenance':
-      title = '◆ 🔧 *MAINTENANCE ENTRY* 🔧 ◆';
-      body = `> 📌 *Type:* ${entry.category}\n> 📝 *Subject:* ${entry.subject}\n> 📄 *Desc:* ${entry.description || 'N/A'}`;
+      title = '★ ✦ *MAINTENANCE ENTRY* ✦ ★';
+      body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}`;
       break;
     case 'samples':
       title = entry.type === 'in'
-        ? '◆ 🧪 *SAMPLE RECEIVED* 🧪 ◆'
-        : '◆ 🧪 *SAMPLE SENT* 🧪 ◆';
-      body = `> 👤 *Person:* ${entry.personName}\n> 📋 *Program:* ${entry.program || 'N/A'}\n> 📦 *Pieces:* ${entry.pieces || 'N/A'}`;
+        ? '★ ✦ *SAMPLE RECEIVED* ✦ ★'
+        : '★ ✦ *SAMPLE SENT* ✦ ★';
+      body = `➤ *Person:* ${entry.personName}\n➤ *Program:* ${entry.program || 'N/A'}\n➤ *Pieces:* ${entry.pieces || 'N/A'}`;
       break;
     case 'clipping':
-      title = '◆ ✂ *CLIPPING ENTRY* ✂ ◆';
-      body = `> 👤 *Clipper:* ${entry.clipperName}\n> 📐 *Size:* ${entry.size}\n> 📋 *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
+      title = '★ ✦ *CLIPPING ENTRY* ✦ ★';
+      body = `➤ *Clipper:* ${entry.clipperName}\n➤ *Size:* ${entry.size}\n➤ *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
       break;
     default:
-      title = `◆ *NEW: ${section.toUpperCase()}* ◆`;
-      body = `> ${JSON.stringify(entry)}`;
+      title = `★ ✦ *NEW: ${section.toUpperCase()}* ✦ ★`;
+      body = `➤ ${JSON.stringify(entry)}`;
   }
 
-  return `${title}\n${line}\n${body}\n${line}\n⭐ *ZAID BWP DEVELOPER* ⭐\n📅 ${dateStr}  ⏰ ${timeStr}`;
+  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}`;
 }
 
-async function sendWhatsAppNotify(section, entry) {
+function sendWhatsAppNotify(section, entry) {
   try {
     const msg = buildWhatsAppMessage(section, entry);
-
-    // Copy message to clipboard (avoids URL encoding issues with emojis)
-    let copied = false;
-    try {
-      await navigator.clipboard.writeText(msg);
-      copied = true;
-    } catch {
-      // Fallback for older browsers
-      const ta = document.createElement('textarea');
-      ta.value = msg;
-      ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px';
-      document.body.appendChild(ta);
-      ta.select();
-      copied = document.execCommand('copy');
-      document.body.removeChild(ta);
-    }
-
-    // Open WhatsApp without ?text= (emojis stay intact via clipboard)
-    window.open(`https://wa.me/${WA_TARGET}`, '_blank');
-
-    if (copied) {
-      showToast('Message Copied!', 'Paste in WhatsApp chat and press send', 'success');
-    }
+    window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
   } catch (e) {
     console.error('WhatsApp notify error:', e);
   }
