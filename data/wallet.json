@@ -180,5 +180,12 @@
     "personOrPurpose": "ZAHID MAHMOOD",
     "amount": "1000",
     "timestamp": "2026-06-13T09:51:03.853Z"
+  },
+  {
+    "id": "wlt_umieuxvxxcb0b",
+    "type": "out",
+    "personOrPurpose": "workers",
+    "amount": 250,
+    "timestamp": "2026-06-14T10:41:04.001Z"
   }
 ]
