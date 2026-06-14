@@ -118,6 +118,35 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// Send WhatsApp message via Render bot (falls back to clipboard + wa.me)
+const BOT_URL = 'https://zaid2.onrender.com';
+
+export async function sendViaBot(message) {
+  try {
+    const res = await fetch(`${BOT_URL}/api/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+    if (data.success) {
+      console.log('[BOT] Message sent via bot');
+      return true;
+    }
+    console.warn('[BOT] Send failed:', data.error);
+  } catch (e) {
+    console.warn('[BOT] Bot offline:', e.message);
+  }
+  // Fallback: clipboard + wa.me
+  try {
+    await navigator.clipboard.writeText(message);
+    window.open('https://wa.me/923244643714', '_blank');
+  } catch {
+    window.open(`https://wa.me/923244643714?text=${encodeURIComponent(message)}`, '_blank');
+  }
+  return false;
+}
+
 // SVG Icons as template literals
 export const ICONS = {
   box: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,

@@ -9,6 +9,7 @@ import { renderMaintenance } from '../sections/maintenance.js';
 import { renderSamples } from '../sections/samples.js';
 import { renderClipping } from '../sections/clipping.js';
 import { initTheme } from '../shared/theme.js';
+import { sendViaBot } from '../shared/utils.js';
 
 // Initialize theme toggle
 initTheme();
@@ -78,12 +79,7 @@ function buildWhatsAppMessage(section, entry) {
 function sendWhatsAppNotify(section, entry) {
   try {
     const msg = buildWhatsAppMessage(section, entry);
-    navigator.clipboard.writeText(msg).then(() => {
-      window.open(`https://wa.me/${WA_TARGET}`, '_blank');
-    }).catch(() => {
-      // Fallback: open wa.me with text
-      window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
-    });
+    sendViaBot(msg);
   } catch (e) {
     console.error('WhatsApp notify error:', e);
   }

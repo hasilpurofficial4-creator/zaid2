@@ -1,6 +1,6 @@
 // Home hub page entry point - index.html
 import { fetchSection } from '../shared/api.js';
-import { formatCurrency, calculateHours, getAbsents } from '../shared/utils.js';
+import { formatCurrency, calculateHours, getAbsents, sendViaBot } from '../shared/utils.js';
 import { initNotifications, setupInstallPrompt } from '../shared/notifications.js';
 import { initTheme } from '../shared/theme.js';
 
@@ -104,15 +104,7 @@ function buildSectionSummary(section) {
 function sendSectionSummary(section) {
   const msg = buildSectionSummary(section);
   if (!msg) return;
-  try {
-    navigator.clipboard.writeText(msg).then(() => {
-      window.open(`https://wa.me/${WA_TARGET}`, '_blank');
-    }).catch(() => {
-      window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
-    });
-  } catch (e) {
-    console.error('WhatsApp summary error:', e);
-  }
+  sendViaBot(msg);
 }
 
 // Quick stats for the hub

@@ -1,6 +1,6 @@
 // Section page entry point - section.html
 import { fetchSection } from '../shared/api.js';
-import { formatCurrency, calculateHours, getAbsents } from '../shared/utils.js';
+import { formatCurrency, calculateHours, getAbsents, sendViaBot } from '../shared/utils.js';
 import { showToast } from '../shared/notifications.js';
 import { renderItems } from '../sections/items.js';
 import { renderWallet } from '../sections/wallet.js';
@@ -350,15 +350,7 @@ function setupWaSendButton() {
   btn.addEventListener('click', () => {
     const msg = buildAllEntries(page, sectionData);
     if (!msg) return;
-    try {
-      navigator.clipboard.writeText(msg).then(() => {
-        window.open('https://wa.me/923244643714', '_blank');
-      }).catch(() => {
-        window.open(`https://wa.me/923244643714?text=${encodeURIComponent(msg)}`, '_blank');
-      });
-    } catch (e) {
-      console.error('WhatsApp send error:', e);
-    }
+    sendViaBot(msg);
   });
 }
 

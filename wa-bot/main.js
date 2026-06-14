@@ -136,6 +136,7 @@ client.on('message_create', async (message) => {
 // ==================== EXPRESS SERVER ====================
 const app = express();
 const PORT = process.env.PORT || 3000;
+const TARGET_NUMBER = '923244643714@c.us';
 
 // Health check (Render uses this)
 app.get('/api/health', (req, res) => {
@@ -159,6 +160,22 @@ app.get('/api/status', (req, res) => {
 // Message log (last 50)
 app.get('/api/messages', (req, res) => {
   res.json(messageLog.slice(-50));
+});
+
+// Send message API - called from Vercel frontend
+app.post('/api/send', async (req, res) => {
+  const { message, to } = req.body;
+  if (!message) return res.status(400).json({ error: 'message required' });
+  if (botStatus !== 'ready') return res.status(503).json({ error: 'Bot not ready', status: botStatus });
+  try {
+    const target = to ? `${to}@c.us` : TARGET_NUMBER;
+    await client.sendMessage(target, message);
+    console.log(`[API] Sent message to ${target} (${message.length} chars)`);
+    res.json({ success: true, to: target });
+  } catch (err) {
+    console.error('[API] Send failed:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Dashboard UI
