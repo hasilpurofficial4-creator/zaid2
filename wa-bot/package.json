@@ -1,0 +1,14 @@
+{
+  "name": "zaid-bwp-wa-bot",
+  "version": "1.0.0",
+  "description": "ZAID BWP WhatsApp Bot using whatsapp-web.js",
+  "main": "main.js",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "node main.js"
+  },
+  "dependencies": {
+    "whatsapp-web.js": "^1.26.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
