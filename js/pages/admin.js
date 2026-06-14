@@ -36,14 +36,24 @@ function buildWhatsAppMessage(section, entry) {
         ? '★ ✦ *MONEY RECEIVED* ✦ ★'
         : '★ ✦ *MONEY SPENT* ✦ ★';
       body = `${entry.type === 'in' ? '➥ *From:*' : '➥ *For:*'} ${entry.personOrPurpose}\n➥ *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
+      if (entry.balance !== undefined) {
+        const balSign = entry.balance >= 0 ? '+' : '-';
+        const balLabel = entry.balance >= 0 ? 'POSITIVE' : 'NEGATIVE';
+        body += `\n➥ *Balance:* ${balSign}Rs. ${Math.abs(entry.balance).toLocaleString()} (${balLabel})`;
+      }
       break;
     case 'person':
       title = '★ ✦ *WORKER ADDED* ✦ ★';
       body = `➤ *Name:* ${entry.personName}\n➤ *Action:* Entry Logged`;
       break;
     case 'maintenance':
-      title = '★ ✦ *MAINTENANCE ENTRY* ✦ ★';
-      body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}`;
+      if (entry.status === 'solved') {
+        title = '★ ✦ *ISSUE SOLVED* ✦ ★';
+        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}\n➤ *Status:* ✓ Resolved`;
+      } else {
+        title = '★ ✦ *MAINTENANCE ENTRY* ✦ ★';
+        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}`;
+      }
       break;
     case 'samples':
       title = entry.type === 'in'
@@ -60,7 +70,7 @@ function buildWhatsAppMessage(section, entry) {
       body = `➤ ${JSON.stringify(entry)}`;
   }
 
-  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}`;
+  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}\n${line}\nSEE MORE INFO.\nhttps://zaidbwp.vercel.app`;
 }
 
 function sendWhatsAppNotify(section, entry) {
@@ -71,6 +81,9 @@ function sendWhatsAppNotify(section, entry) {
     console.error('WhatsApp notify error:', e);
   }
 }
+
+// Expose globally so other modules (maintenance.js) can trigger notifications
+window.sendWhatsAppNotify = sendWhatsAppNotify;
 
 async function loadSection(section) {
   try {
@@ -144,6 +157,12 @@ function setupForms() {
       document.getElementById('wallet-amount').value = '';
       document.getElementById('wallet-form-panel').classList.remove('active');
       showToast('Success', 'Wallet entry added', 'success');
+      // Calculate running balance after new entry
+      try {
+        const walletData = await fetchSection('wallet');
+        const balance = walletData.reduce((acc, e) => acc + (e.type === 'in' ? Number(e.amount) : -Number(e.amount)), 0);
+        entryData.balance = balance;
+      } catch { /* balance calc failed, send without it */ }
       sendWhatsAppNotify('wallet', entryData);
       loadAllSections();
     } catch (err) {
