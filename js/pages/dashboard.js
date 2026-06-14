@@ -29,7 +29,7 @@ function buildSectionSummary(section) {
       const available = data.filter(e => e.status === 'available').length;
       const maintenance = data.filter(e => e.status === 'maintenance').length;
       const persons = [...new Set(data.map(e => e.person).filter(Boolean))];
-      title = '★ ✦ *ITEMS SUMMARY* ✦ ★';
+      title = '📦 ✦ *ITEMS SUMMARY* ✦ 📦';
       body = `➤ *Total Items:* ${total}\n➤ *Total Quantity:* ${totalQty}\n➤ *Available:* ${available}\n➤ *In Use:* ${inUse}\n➤ *Maintenance:* ${maintenance}`;
       if (persons.length > 0) body += `\n➤ *Assigned To:* ${persons.length} persons`;
       break;
@@ -40,7 +40,7 @@ function buildSectionSummary(section) {
       const balance = totalIn - totalOut;
       const balSign = balance >= 0 ? '+' : '-';
       const balLabel = balance >= 0 ? 'POSITIVE' : 'NEGATIVE';
-      title = '★ ✦ *WALLET SUMMARY* ✦ ★';
+      title = '💰 ✦ *WALLET SUMMARY* ✦ 💰';
       body = `➤ *Total Received:* Rs. ${totalIn.toLocaleString()}\n➤ *Total Spent:* Rs. ${totalOut.toLocaleString()}\n➤ *Balance:* ${balSign}Rs. ${Math.abs(balance).toLocaleString()} (${balLabel})\n➤ *Entries:* ${data.length}`;
       break;
     }
@@ -58,7 +58,7 @@ function buildSectionSummary(section) {
         totalAbsentsAll += absents;
         return `  ► ${name}: ${hours.totalHours}h | ${hours.daysWorked}d present | ${absents} absents`;
       }).join('\n');
-      title = '★ ✦ *PERSON SUMMARY* ✦ ★';
+      title = '👷 ✦ *PERSON SUMMARY* ✦ 👷';
       body = `➤ *Month:* ${monthName} ${year}\n➤ *Workers:* ${workers.length}\n➤ *Total Hours:* ${Math.round(totalHoursAll * 10) / 10}h\n➤ *Total Days Worked:* ${totalDaysAll}\n➤ *Total Absents:* ${totalAbsentsAll}\n\n*Per Worker:*\n${workerLines}`;
       break;
     }
@@ -66,7 +66,7 @@ function buildSectionSummary(section) {
       const total = data.length;
       const open = data.filter(e => e.status !== 'solved').length;
       const solved = total - open;
-      title = '★ ✦ *MAINTENANCE SUMMARY* ✦ ★';
+      title = '🔧 ✦ *MAINTENANCE SUMMARY* ✦ 🔧';
       body = `➤ *Total Issues:* ${total}\n➤ *Open:* ${open}\n➤ *Solved:* ${solved}`;
       break;
     }
@@ -74,7 +74,7 @@ function buildSectionSummary(section) {
       const totalIn = data.filter(e => e.type === 'in').length;
       const totalOut = data.filter(e => e.type === 'out').length;
       const totalPieces = data.reduce((a, e) => a + (Number(e.pieces) || 0), 0);
-      title = '★ ✦ *SAMPLES SUMMARY* ✦ ★';
+      title = '🧪 ✦ *SAMPLES SUMMARY* ✦ 🧪';
       body = `➤ *Total Entries:* ${data.length}\n➤ *Received (In):* ${totalIn}\n➤ *Sent (Out):* ${totalOut}\n➤ *Total Pieces:* ${totalPieces}`;
       break;
     }
@@ -88,7 +88,7 @@ function buildSectionSummary(section) {
       transferEntries.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) totalTransferred += n; });
       const totalRupees = totalSize * 12;
       const remaining = totalRupees - totalTransferred;
-      title = '★ ✦ *CLIPPING SUMMARY* ✦ ★';
+      title = '✂️ ✦ *CLIPPING SUMMARY* ✦ ✂️';
       body = `➤ *Total Clippings:* ${inEntries.length + outEntries.length}\n➤ *Clipped In:* ${inEntries.length} (${totalSize} yards)\n➤ *Out for Clipping:* ${outEntries.length}\n➤ *Total Payment:* Rs. ${totalRupees.toLocaleString()} (${totalSize} × 12)\n➤ *Paid/Transferred:* Rs. ${totalTransferred.toLocaleString()} (${transferEntries.length} transfers)\n➤ *Remaining:* Rs. ${remaining.toLocaleString()}`;
       break;
     }
@@ -105,7 +105,11 @@ function sendSectionSummary(section) {
   const msg = buildSectionSummary(section);
   if (!msg) return;
   try {
-    window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
+    navigator.clipboard.writeText(msg).then(() => {
+      window.open(`https://wa.me/${WA_TARGET}`, '_blank');
+    }).catch(() => {
+      window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
+    });
   } catch (e) {
     console.error('WhatsApp summary error:', e);
   }

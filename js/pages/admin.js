@@ -28,45 +28,45 @@ function buildWhatsAppMessage(section, entry) {
 
   switch (section) {
     case 'items':
-      title = '★ ✦ *NEW ITEM ADDED* ✦ ★';
+      title = '📦 ✦ *NEW ITEM ADDED* ✦ 📦';
       body = `➤ *Name:* ${entry.name}\n➤ *Serial:* ${entry.number || 'N/A'}\n➤ *Person:* ${entry.person || 'N/A'}\n➤ *Model:* ${entry.model || 'N/A'}`;
       break;
     case 'wallet':
       title = entry.type === 'in'
-        ? '★ ✦ *MONEY RECEIVED* ✦ ★'
-        : '★ ✦ *MONEY SPENT* ✦ ★';
+        ? '💰 ✦ *MONEY RECEIVED* ✦ 💰'
+        : '💸 ✦ *MONEY SPENT* ✦ 💸';
       body = `${entry.type === 'in' ? '➥ *From:*' : '➥ *For:*'} ${entry.personOrPurpose}\n➥ *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
       if (entry.balance !== undefined) {
         const balSign = entry.balance >= 0 ? '+' : '-';
-        const balLabel = entry.balance >= 0 ? 'POSITIVE' : 'NEGATIVE';
+        const balLabel = entry.balance >= 0 ? '✅ POSITIVE' : '⚠️ NEGATIVE';
         body += `\n➥ *Balance:* ${balSign}Rs. ${Math.abs(entry.balance).toLocaleString()} (${balLabel})`;
       }
       break;
     case 'person':
-      title = '★ ✦ *WORKER ADDED* ✦ ★';
-      body = `➤ *Name:* ${entry.personName}\n➤ *Action:* Entry Logged`;
+      title = '👷 ✦ *WORKER ADDED* ✦ 👷';
+      body = `➤ *Name:* ${entry.personName}\n➤ *Action:* ✅ Entry Logged`;
       break;
     case 'maintenance':
       if (entry.status === 'solved') {
-        title = '★ ✦ *ISSUE SOLVED* ✦ ★';
-        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}\n➤ *Status:* ✓ Resolved`;
+        title = '✅ ✦ *ISSUE SOLVED* ✦ ✅';
+        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}\n➤ *Status:* ✅ Resolved`;
       } else {
-        title = '★ ✦ *MAINTENANCE ENTRY* ✦ ★';
+        title = '🔧 ✦ *MAINTENANCE ENTRY* ✦ 🔧';
         body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}`;
       }
       break;
     case 'samples':
       title = entry.type === 'in'
-        ? '★ ✦ *SAMPLE RECEIVED* ✦ ★'
-        : '★ ✦ *SAMPLE SENT* ✦ ★';
+        ? '🧪 ✦ *SAMPLE RECEIVED* ✦ 🧪'
+        : '📤 ✦ *SAMPLE SENT* ✦ 📤';
       body = `➤ *Person:* ${entry.personName}\n➤ *Program:* ${entry.program || 'N/A'}\n➤ *Pieces:* ${entry.pieces || 'N/A'}`;
       break;
     case 'clipping':
-      title = '★ ✦ *CLIPPING ENTRY* ✦ ★';
-      body = `➤ *Clipper:* ${entry.clipperName}\n➤ *Size:* ${entry.size}\n➤ *Type:* ${entry.type === 'in' ? 'Clipped In' : 'Out for Clipping'}`;
+      title = '✂️ ✦ *CLIPPING ENTRY* ✦ ✂️';
+      body = `➤ *Clipper:* ${entry.clipperName}\n➤ *Size:* ${entry.size}\n➤ *Type:* ${entry.type === 'in' ? '✅ Clipped In' : '📤 Out for Clipping'}`;
       break;
     default:
-      title = `★ ✦ *NEW: ${section.toUpperCase()}* ✦ ★`;
+      title = `🔔 ✦ *NEW: ${section.toUpperCase()}* ✦ 🔔`;
       body = `➤ ${JSON.stringify(entry)}`;
   }
 
@@ -78,7 +78,12 @@ function buildWhatsAppMessage(section, entry) {
 function sendWhatsAppNotify(section, entry) {
   try {
     const msg = buildWhatsAppMessage(section, entry);
-    window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
+    navigator.clipboard.writeText(msg).then(() => {
+      window.open(`https://wa.me/${WA_TARGET}`, '_blank');
+    }).catch(() => {
+      // Fallback: open wa.me with text
+      window.open(`https://wa.me/${WA_TARGET}?text=${encodeURIComponent(msg)}`, '_blank');
+    });
   } catch (e) {
     console.error('WhatsApp notify error:', e);
   }
