@@ -187,5 +187,12 @@
     "personOrPurpose": "worker",
     "amount": 250,
     "timestamp": "2026-06-14T17:30:05.492Z"
+  },
+  {
+    "id": "wlt_uyyimr4jdec07",
+    "type": "out",
+    "personOrPurpose": "test",
+    "amount": 250,
+    "timestamp": "2026-06-14T17:31:06.601Z"
   }
 ]
