@@ -30,8 +30,8 @@ function buildSectionSummary(section) {
       const maintenance = data.filter(e => e.status === 'maintenance').length;
       const persons = [...new Set(data.map(e => e.person).filter(Boolean))];
       title = '📦 ✦ *ITEMS SUMMARY* ✦ 📦';
-      body = `➤ *Total Items:* ${total}\n➤ *Total Quantity:* ${totalQty}\n➤ *Available:* ${available}\n➤ *In Use:* ${inUse}\n➤ *Maintenance:* ${maintenance}`;
-      if (persons.length > 0) body += `\n➤ *Assigned To:* ${persons.length} persons`;
+      body = `📦 *Total Items:* ${total}\n🔢 *Total Quantity:* ${totalQty}\n✅ *Available:* ${available}\n📤 *In Use:* ${inUse}\n🔧 *Maintenance:* ${maintenance}`;
+      if (persons.length > 0) body += `\n👥 *Assigned To:* ${persons.length} persons`;
       break;
     }
     case 'wallet': {
@@ -39,9 +39,9 @@ function buildSectionSummary(section) {
       const totalOut = data.filter(e => e.type === 'out').reduce((a, e) => a + Number(e.amount), 0);
       const balance = totalIn - totalOut;
       const balSign = balance >= 0 ? '+' : '-';
-      const balLabel = balance >= 0 ? 'POSITIVE' : 'NEGATIVE';
+      const balLabel = balance >= 0 ? '✅ POSITIVE' : '⚠️ NEGATIVE';
       title = '💰 ✦ *WALLET SUMMARY* ✦ 💰';
-      body = `➤ *Total Received:* Rs. ${totalIn.toLocaleString()}\n➤ *Total Spent:* Rs. ${totalOut.toLocaleString()}\n➤ *Balance:* ${balSign}Rs. ${Math.abs(balance).toLocaleString()} (${balLabel})\n➤ *Entries:* ${data.length}`;
+      body = `📥 *Total Received:* Rs. ${totalIn.toLocaleString()}\n📤 *Total Spent:* Rs. ${totalOut.toLocaleString()}\n🏦 *Balance:* ${balSign}Rs. ${Math.abs(balance).toLocaleString()} (${balLabel})\n📊 *Entries:* ${data.length}`;
       break;
     }
     case 'person': {
@@ -56,10 +56,10 @@ function buildSectionSummary(section) {
         totalHoursAll += hours.totalHours;
         totalDaysAll += hours.daysWorked;
         totalAbsentsAll += absents;
-        return `  ► ${name}: ${hours.totalHours}h | ${hours.daysWorked}d present | ${absents} absents`;
+        return `  👤 ${name}: ⏱️ ${hours.totalHours}h | 📅 ${hours.daysWorked}d present | ❌ ${absents} absents`;
       }).join('\n');
       title = '👷 ✦ *PERSON SUMMARY* ✦ 👷';
-      body = `➤ *Month:* ${monthName} ${year}\n➤ *Workers:* ${workers.length}\n➤ *Total Hours:* ${Math.round(totalHoursAll * 10) / 10}h\n➤ *Total Days Worked:* ${totalDaysAll}\n➤ *Total Absents:* ${totalAbsentsAll}\n\n*Per Worker:*\n${workerLines}`;
+      body = `📅 *Month:* ${monthName} ${year}\n👥 *Workers:* ${workers.length}\n⏱️ *Total Hours:* ${Math.round(totalHoursAll * 10) / 10}h\n📆 *Total Days Worked:* ${totalDaysAll}\n❌ *Total Absents:* ${totalAbsentsAll}\n\n👷 *Per Worker:*\n${workerLines}`;
       break;
     }
     case 'maintenance': {
@@ -67,7 +67,7 @@ function buildSectionSummary(section) {
       const open = data.filter(e => e.status !== 'solved').length;
       const solved = total - open;
       title = '🔧 ✦ *MAINTENANCE SUMMARY* ✦ 🔧';
-      body = `➤ *Total Issues:* ${total}\n➤ *Open:* ${open}\n➤ *Solved:* ${solved}`;
+      body = `📊 *Total Issues:* ${total}\n🔴 *Open:* ${open}\n✅ *Solved:* ${solved}`;
       break;
     }
     case 'samples': {
@@ -75,7 +75,7 @@ function buildSectionSummary(section) {
       const totalOut = data.filter(e => e.type === 'out').length;
       const totalPieces = data.reduce((a, e) => a + (Number(e.pieces) || 0), 0);
       title = '🧪 ✦ *SAMPLES SUMMARY* ✦ 🧪';
-      body = `➤ *Total Entries:* ${data.length}\n➤ *Received (In):* ${totalIn}\n➤ *Sent (Out):* ${totalOut}\n➤ *Total Pieces:* ${totalPieces}`;
+      body = `📊 *Total Entries:* ${data.length}\n📥 *Received (In):* ${totalIn}\n📤 *Sent (Out):* ${totalOut}\n🔢 *Total Pieces:* ${totalPieces}`;
       break;
     }
     case 'clipping': {
@@ -89,7 +89,7 @@ function buildSectionSummary(section) {
       const totalRupees = totalSize * 12;
       const remaining = totalRupees - totalTransferred;
       title = '✂️ ✦ *CLIPPING SUMMARY* ✦ ✂️';
-      body = `➤ *Total Clippings:* ${inEntries.length + outEntries.length}\n➤ *Clipped In:* ${inEntries.length} (${totalSize} yards)\n➤ *Out for Clipping:* ${outEntries.length}\n➤ *Total Payment:* Rs. ${totalRupees.toLocaleString()} (${totalSize} × 12)\n➤ *Paid/Transferred:* Rs. ${totalTransferred.toLocaleString()} (${transferEntries.length} transfers)\n➤ *Remaining:* Rs. ${remaining.toLocaleString()}`;
+      body = `✂️ *Total Clippings:* ${inEntries.length + outEntries.length}\n📥 *Clipped In:* ${inEntries.length} (${totalSize} yards)\n📤 *Out for Clipping:* ${outEntries.length}\n💰 *Total Payment:* Rs. ${totalRupees.toLocaleString()} (${totalSize} × 12)\n💸 *Paid/Transferred:* Rs. ${totalTransferred.toLocaleString()} (${transferEntries.length} transfers)\n🏦 *Remaining:* Rs. ${remaining.toLocaleString()}`;
       break;
     }
     default:
@@ -97,7 +97,7 @@ function buildSectionSummary(section) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}\n${line}\nSEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
 }
 
 // Send section summary via WhatsApp

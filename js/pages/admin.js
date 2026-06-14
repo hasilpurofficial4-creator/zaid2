@@ -29,41 +29,41 @@ function buildWhatsAppMessage(section, entry) {
   switch (section) {
     case 'items':
       title = '📦 ✦ *NEW ITEM ADDED* ✦ 📦';
-      body = `➤ *Name:* ${entry.name}\n➤ *Serial:* ${entry.number || 'N/A'}\n➤ *Person:* ${entry.person || 'N/A'}\n➤ *Model:* ${entry.model || 'N/A'}`;
+      body = `📋 *Name:* ${entry.name}\n🔢 *Serial:* ${entry.number || 'N/A'}\n👤 *Person:* ${entry.person || 'N/A'}\n📐 *Model:* ${entry.model || 'N/A'}`;
       break;
     case 'wallet':
       title = entry.type === 'in'
         ? '💰 ✦ *MONEY RECEIVED* ✦ 💰'
         : '💸 ✦ *MONEY SPENT* ✦ 💸';
-      body = `${entry.type === 'in' ? '➥ *From:*' : '➥ *For:*'} ${entry.personOrPurpose}\n➥ *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
+      body = `${entry.type === 'in' ? '📥 *From:*' : '📤 *For:*'} ${entry.personOrPurpose}\n💵 *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
       if (entry.balance !== undefined) {
         const balSign = entry.balance >= 0 ? '+' : '-';
         const balLabel = entry.balance >= 0 ? '✅ POSITIVE' : '⚠️ NEGATIVE';
-        body += `\n➥ *Balance:* ${balSign}Rs. ${Math.abs(entry.balance).toLocaleString()} (${balLabel})`;
+        body += `\n🏦 *Balance:* ${balSign}Rs. ${Math.abs(entry.balance).toLocaleString()} (${balLabel})`;
       }
       break;
     case 'person':
       title = '👷 ✦ *WORKER ADDED* ✦ 👷';
-      body = `➤ *Name:* ${entry.personName}\n➤ *Action:* ✅ Entry Logged`;
+      body = `👤 *Name:* ${entry.personName}\n✅ *Action:* Entry Logged`;
       break;
     case 'maintenance':
       if (entry.status === 'solved') {
         title = '✅ ✦ *ISSUE SOLVED* ✦ ✅';
-        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}\n➤ *Status:* ✅ Resolved`;
+        body = `🔧 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n📄 *Desc:* ${entry.description || 'N/A'}\n✅ *Status:* Resolved`;
       } else {
         title = '🔧 ✦ *MAINTENANCE ENTRY* ✦ 🔧';
-        body = `➤ *Type:* ${entry.category}\n➤ *Subject:* ${entry.subject}\n➤ *Desc:* ${entry.description || 'N/A'}`;
+        body = `🔧 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n📄 *Desc:* ${entry.description || 'N/A'}`;
       }
       break;
     case 'samples':
       title = entry.type === 'in'
         ? '🧪 ✦ *SAMPLE RECEIVED* ✦ 🧪'
         : '📤 ✦ *SAMPLE SENT* ✦ 📤';
-      body = `➤ *Person:* ${entry.personName}\n➤ *Program:* ${entry.program || 'N/A'}\n➤ *Pieces:* ${entry.pieces || 'N/A'}`;
+      body = `👤 *Person:* ${entry.personName}\n📋 *Program:* ${entry.program || 'N/A'}\n🔢 *Pieces:* ${entry.pieces || 'N/A'}`;
       break;
     case 'clipping':
       title = '✂️ ✦ *CLIPPING ENTRY* ✦ ✂️';
-      body = `➤ *Clipper:* ${entry.clipperName}\n➤ *Size:* ${entry.size}\n➤ *Type:* ${entry.type === 'in' ? '✅ Clipped In' : '📤 Out for Clipping'}`;
+      body = `✂️ *Clipper:* ${entry.clipperName}\n📏 *Size:* ${entry.size}\n📥 *Type:* ${entry.type === 'in' ? '✅ Clipped In' : '📤 Out for Clipping'}`;
       break;
     default:
       title = `🔔 ✦ *NEW: ${section.toUpperCase()}* ✦ 🔔`;
@@ -72,7 +72,7 @@ function buildWhatsAppMessage(section, entry) {
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
 
-  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}\n${line}\nSEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
 }
 
 function sendWhatsAppNotify(section, entry) {
