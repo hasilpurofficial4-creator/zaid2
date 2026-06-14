@@ -1,4 +1,33 @@
 /* Dashboard-specific styles */
+
+/* WhatsApp Send Button in Section Header */
+.wa-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+  opacity: 0.9;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
+}
+
+.wa-send-btn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+  box-shadow: 0 4px 14px rgba(37, 211, 102, 0.5);
+}
+
+.wa-send-btn:active {
+  transform: scale(0.95);
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
