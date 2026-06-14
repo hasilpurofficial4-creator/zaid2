@@ -70,7 +70,9 @@ function buildWhatsAppMessage(section, entry) {
       body = `➤ ${JSON.stringify(entry)}`;
   }
 
-  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}\n${line}\nSEE MORE INFO.\nhttps://zaidbwp.vercel.app`;
+  const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
+
+  return `${title}\n${line}\n${body}\n${line}\n✯ *ZAID BWP DEVELOPER* ✯\n► ${dateStr}  ◄ ${timeStr}\n${line}\nSEE MORE INFO.\n${pageUrl}`;
 }
 
 function sendWhatsAppNotify(section, entry) {
