@@ -30,7 +30,7 @@ WORKDIR /app
 
 # Install dependencies first (cache layer)
 COPY package.json package-lock.json ./
-RUN npm ci --production
+RUN npm install --production
 
 # Copy bot code
 COPY . .
