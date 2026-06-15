@@ -16,5 +16,14 @@
     "status": "solved",
     "solvedAt": "2026-06-14T17:50:36.953Z",
     "timestamp": "2026-06-05T08:00:00.000Z"
+  },
+  {
+    "id": "mnt_pl31r0vnwgtl3",
+    "category": "Urgent Action",
+    "subject": "MACHINE OFF",
+    "description": "SILVER FOIL NOT AVAILABLE",
+    "status": "open",
+    "solvedAt": null,
+    "timestamp": "2026-06-15T08:20:38.052Z"
   }
 ]
