@@ -1,4 +1,4 @@
-// WhatsApp Send API - Proxy to whatsapp-service on Render
+// WhatsApp Send API - Proxy to whatsapp-service on Railway
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'POST only' });

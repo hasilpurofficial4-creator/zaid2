@@ -12,8 +12,8 @@
     "api/data/*.js": {
       "maxDuration": 30
     },
-    "api/whatsapp.js": {
-      "maxDuration": 30
+    "api/wa-status.js": {
+      "maxDuration": 15
     },
     "api/whatsapp-send.js": {
       "maxDuration": 30

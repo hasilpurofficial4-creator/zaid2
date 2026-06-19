@@ -1,5 +1,5 @@
 // Admin page entry point - admin.html
-import { fetchSection, createEntry, getToken } from '../shared/api.js';
+import { fetchSection, createEntry } from '../shared/api.js';
 import { showToast } from '../shared/notifications.js';
 import { showPasswordGate, setupLogout } from '../shared/auth.js';
 import { renderItems } from '../sections/items.js';
@@ -260,30 +260,11 @@ showPasswordGate(() => {
   initWhatsAppStatus();
 });
 
-/* ========== WhatsApp Integration (Pairing Code) ========== */
-
-function waHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer ' + getToken()
-  };
-}
-
-const WA_ALL_SECTIONS = [
-  'wa-status-section','wa-pair-section','wa-code-section',
-  'wa-loading-section','wa-linked-section','wa-error-section'
-];
-
-function showWaSection(...ids) {
-  WA_ALL_SECTIONS.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = ids.includes(id) ? '' : 'none';
-  });
-}
+/* ========== WhatsApp Bot Status (Railway) ========== */
 
 async function initWhatsAppStatus() {
   try {
-    const res = await fetch('/api/whatsapp?action=status', { headers: waHeaders() });
+    const res = await fetch('/api/wa-status');
     const data = await res.json();
     updateWaButton(data.linked);
   } catch { /* silent */ }
@@ -296,29 +277,18 @@ function updateWaButton(linked) {
   if (linked) {
     btn.classList.remove('btn-success');
     btn.classList.add('btn-wa-linked');
-    if (txt) txt.textContent = 'WA Linked';
+    if (txt) txt.textContent = 'WA Connected';
   } else {
     btn.classList.remove('btn-wa-linked');
     btn.classList.add('btn-success');
-    if (txt) txt.textContent = 'WhatsApp';
+    if (txt) txt.textContent = 'WA Offline';
   }
 }
 
 window.openWhatsAppModal = async function() {
   const modal = document.getElementById('wa-modal');
   if (modal) modal.style.display = 'flex';
-
-  // Reset UI
-  showWaSection('wa-status-section');
-  document.getElementById('wa-link-btn').style.display = 'none';
-  document.getElementById('wa-unlink-btn').style.display = 'none';
-  document.getElementById('wa-status-label').textContent = 'Checking...';
-  document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-checking';
-  document.getElementById('wa-phone-info').style.display = 'none';
-  document.getElementById('wa-session-info').style.display = 'none';
-  document.getElementById('wa-error-section').style.display = 'none';
-
-  await checkWhatsAppStatus();
+  await checkBotStatus();
 };
 
 window.closeWhatsAppModal = function() {
@@ -326,192 +296,111 @@ window.closeWhatsAppModal = function() {
   if (modal) modal.style.display = 'none';
 };
 
-async function checkWhatsAppStatus() {
+async function checkBotStatus() {
+  const statusEl = document.getElementById('wa-status-label');
+  const dotEl = document.getElementById('wa-status-dot');
+  const detailsEl = document.getElementById('wa-bot-details');
+  const testBtn = document.getElementById('wa-test-send-btn');
+
+  if (statusEl) statusEl.textContent = 'Checking...';
+  if (dotEl) dotEl.className = 'wa-status-dot wa-dot-checking';
+  if (detailsEl) detailsEl.style.display = 'none';
+
   try {
-    const res = await fetch('/api/whatsapp?action=status', { headers: waHeaders() });
+    const res = await fetch('/api/wa-status');
     const data = await res.json();
 
-    if (data.linked) {
-      document.getElementById('wa-status-label').textContent = 'Connected';
-      document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-linked';
-      document.getElementById('wa-phone-info').style.display = 'flex';
-      document.getElementById('wa-phone-number').textContent = '+' + (data.phone || 'Unknown');
-      document.getElementById('wa-link-btn').style.display = 'none';
-      document.getElementById('wa-unlink-btn').style.display = 'inline-flex';
-
-      // Show session ID if available
-      if (data.sessionId) {
-        document.getElementById('wa-session-info').style.display = 'flex';
-        document.getElementById('wa-session-id').textContent = data.sessionId;
-      }
-
-      showWaSection('wa-status-section', 'wa-linked-section');
-
-      // Show session ID in linked section too
-      if (data.sessionId) {
-        document.getElementById('wa-linked-session').style.display = 'block';
-        document.getElementById('wa-session-box').textContent = data.sessionId;
-      }
-
-      updateWaButton(true);
-    } else {
-      document.getElementById('wa-status-label').textContent = 'Not Connected';
-      document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-unlinked';
-      document.getElementById('wa-phone-info').style.display = 'none';
-      document.getElementById('wa-session-info').style.display = 'none';
-      document.getElementById('wa-link-btn').style.display = 'inline-flex';
-      document.getElementById('wa-unlink-btn').style.display = 'none';
-      showWaSection('wa-status-section');
-      updateWaButton(false);
+    if (data.error) {
+      if (statusEl) statusEl.textContent = 'Error';
+      if (dotEl) dotEl.className = 'wa-status-dot wa-dot-unlinked';
+      showBotDetails(data);
+      return;
     }
+
+    if (data.linked) {
+      if (statusEl) statusEl.textContent = 'Connected';
+      if (dotEl) dotEl.className = 'wa-status-dot wa-dot-linked';
+      updateWaButton(true);
+    } else if (data.online) {
+      if (statusEl) statusEl.textContent = 'Online (not paired)';
+      if (dotEl) dotEl.className = 'wa-status-dot wa-dot-checking';
+    } else {
+      if (statusEl) statusEl.textContent = 'Offline';
+      if (dotEl) dotEl.className = 'wa-status-dot wa-dot-unlinked';
+    }
+
+    showBotDetails(data);
   } catch (err) {
-    document.getElementById('wa-status-label').textContent = 'Error';
-    document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-unlinked';
-    document.getElementById('wa-link-btn').style.display = 'inline-flex';
-    showWaSection('wa-status-section');
+    if (statusEl) statusEl.textContent = 'Error';
+    if (dotEl) dotEl.className = 'wa-status-dot wa-dot-unlinked';
   }
 }
 
-// "Link WhatsApp" button shows the phone input pair section
-window.linkWhatsApp = function() {
-  showWaSection('wa-pair-section');
-  document.getElementById('wa-phone-input').value = '';
-  document.getElementById('wa-phone-input').focus();
-  document.getElementById('wa-error-section').style.display = 'none';
-};
+function showBotDetails(data) {
+  const detailsEl = document.getElementById('wa-bot-details');
+  if (!detailsEl) return;
+  detailsEl.style.display = 'block';
 
-// Request pairing code from the API
-window.requestPairingCode = async function() {
-  const phone = document.getElementById('wa-phone-input').value.trim().replace(/\D/g, '');
-  if (!phone || phone.length < 10) {
-    showWaSection('wa-pair-section', 'wa-error-section');
-    document.getElementById('wa-error-text').textContent = 'Please enter a valid phone number with country code (e.g. 923001234567)';
-    return;
+  const fields = [
+    { label: 'Bot Running', value: data.botRunning ? '✅ Yes' : '❌ No' },
+    { label: 'WhatsApp', value: data.linked ? '✅ Connected' : '❌ Not paired' },
+    { label: 'Pending Messages', value: data.pendingMessages ?? 'N/A' },
+    { label: 'Sent Messages', value: data.sentMessages ?? 'N/A' },
+    { label: 'Admin Number', value: data.adminNumber || 'N/A' },
+    { label: 'Uptime', value: data.uptime || 'N/A' },
+    { label: 'Service URL', value: data.serviceUrl || 'Not set' }
+  ];
+
+  let html = '<div class="wa-bot-info">';
+  fields.forEach(f => {
+    html += `<div class="wa-bot-row"><span class="wa-bot-label">${f.label}:</span><span class="wa-bot-value">${f.value}</span></div>`;
+  });
+
+  if (data.error) {
+    html += `<div class="wa-bot-error">⚠️ ${data.error}</div>`;
+  }
+  if (data.hint) {
+    html += `<div class="wa-bot-hint">💡 ${data.hint}</div>`;
   }
 
-  // Show loading
-  showWaSection('wa-loading-section');
-  document.getElementById('wa-loading-text').textContent = 'Requesting pairing code... Please wait.';
-  document.getElementById('wa-error-section').style.display = 'none';
+  if (data.recentLogs && data.recentLogs.length > 0) {
+    html += '<div class="wa-bot-logs"><span class="wa-bot-label">Recent Logs:</span><pre class="wa-log-box">';
+    data.recentLogs.slice(-5).forEach(l => { html += l + '\n'; });
+    html += '</pre></div>';
+  }
+
+  html += '</div>';
+  detailsEl.innerHTML = html;
+}
+
+// Test send button
+window.testWaSend = async function() {
+  const btn = document.getElementById('wa-test-send-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 58000);
-
-    const res = await fetch('/api/whatsapp?action=pair', {
+    const testMsg = '🧪 *TEST MESSAGE*\n══════════════════════════════\n✅ WhatsApp bot is working!\n📅 ' + new Date().toLocaleString() + '\n══════════════════════════════\n👨‍💻 *ZAID BWP DEVELOPER*';
+    const res = await fetch('/api/whatsapp-send', {
       method: 'POST',
-      headers: waHeaders(),
-      body: JSON.stringify({ phone }),
-      signal: controller.signal
-    });
-    clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({ error: 'Server error ' + res.status }));
-      throw new Error(errData.error || errData.hint || 'API returned ' + res.status);
-    }
-
-    const data = await res.json();
-
-    if (data.status === 'linked') {
-      // Successfully paired!
-      showWaSection('wa-status-section', 'wa-linked-section');
-      document.getElementById('wa-status-label').textContent = 'Connected';
-      document.getElementById('wa-status-dot').className = 'wa-status-dot wa-dot-linked';
-      document.getElementById('wa-phone-info').style.display = 'flex';
-      document.getElementById('wa-phone-number').textContent = '+' + (data.phone || phone);
-      document.getElementById('wa-unlink-btn').style.display = 'inline-flex';
-
-      // Show session ID prominently
-      if (data.sessionId) {
-        document.getElementById('wa-linked-session').style.display = 'block';
-        document.getElementById('wa-session-box').textContent = data.sessionId;
-        document.getElementById('wa-session-info').style.display = 'flex';
-        document.getElementById('wa-session-id').textContent = data.sessionId;
-      }
-
-      updateWaButton(true);
-      showToast('WhatsApp Linked!', 'Session ID: ' + (data.sessionId || 'N/A') + ' — Add as WA_SESSION_ID env var on Vercel', 'success');
-
-    } else if (data.pairingCode && data.status !== 'timeout') {
-      // Got pairing code but connection not yet established (shouldn't happen with current API, but handle it)
-      showWaSection('wa-code-section');
-      document.getElementById('wa-code-display').textContent = data.pairingCode;
-      document.getElementById('wa-waiting-text').textContent = 'Waiting for code entry...';
-
-      // If there's also a message about error/timeout
-      if (data.status === 'error' || data.status === 'timeout') {
-        showWaSection('wa-code-section', 'wa-error-section');
-        document.getElementById('wa-error-text').textContent = data.message || 'Pairing timed out. Please try again.';
-        document.getElementById('wa-link-btn').style.display = 'inline-flex';
-      }
-
-    } else if (data.status === 'error' || data.status === 'timeout') {
-      showWaSection('wa-status-section', 'wa-error-section');
-      document.getElementById('wa-error-text').textContent = data.message || 'Pairing failed. Please try again.';
-      document.getElementById('wa-link-btn').style.display = 'inline-flex';
-
-    } else {
-      showWaSection('wa-status-section', 'wa-error-section');
-      document.getElementById('wa-error-text').textContent = 'Unexpected response. Please try again.';
-      document.getElementById('wa-link-btn').style.display = 'inline-flex';
-    }
-
-  } catch (err) {
-    showWaSection('wa-status-section', 'wa-error-section');
-    const msg = err.name === 'AbortError'
-      ? 'Request timed out (58s). Please try again.'
-      : 'Error: ' + err.message;
-    document.getElementById('wa-error-text').textContent = msg;
-    document.getElementById('wa-link-btn').style.display = 'inline-flex';
-  }
-};
-
-// Copy session ID to clipboard
-window.copySessionId = function() {
-  const box = document.getElementById('wa-session-box');
-  if (box && box.textContent) {
-    navigator.clipboard.writeText(box.textContent).then(() => {
-      showToast('Copied!', 'Session ID copied to clipboard', 'success');
-    }).catch(() => {
-      // Fallback
-      const ta = document.createElement('textarea');
-      ta.value = box.textContent;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      showToast('Copied!', 'Session ID copied to clipboard', 'success');
-    });
-  }
-};
-
-window.unlinkWhatsApp = async function() {
-  if (!confirm('Are you sure you want to unlink WhatsApp? Notifications will stop.')) return;
-
-  document.getElementById('wa-unlink-btn').disabled = true;
-  document.getElementById('wa-unlink-btn').innerHTML = '<span class="loading-spinner"></span> Unlinking...';
-
-  try {
-    const res = await fetch('/api/whatsapp?action=unlink', {
-      method: 'DELETE',
-      headers: waHeaders()
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: testMsg })
     });
     const data = await res.json();
-
     if (data.success) {
-      showToast('WhatsApp', 'WhatsApp unlinked successfully.', 'success');
-      await checkWhatsAppStatus();
+      showToast('WhatsApp', '✅ Test message queued successfully!', 'success');
     } else {
-      showToast('Error', data.error || 'Failed to unlink', 'error');
+      showToast('WhatsApp', '❌ Failed: ' + (data.error || 'Unknown error'), 'error');
     }
   } catch (err) {
-    showToast('Error', 'Connection error: ' + err.message, 'error');
+    showToast('WhatsApp', '❌ Error: ' + err.message, 'error');
   } finally {
-    document.getElementById('wa-unlink-btn').disabled = false;
-    document.getElementById('wa-unlink-btn').innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg> Unlink WhatsApp';
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Test Message'; }
   }
+};
+
+// Refresh status button
+window.refreshWaStatus = function() {
+  checkBotStatus();
 };
 
 // Close modal on overlay click

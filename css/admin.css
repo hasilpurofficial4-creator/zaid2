@@ -639,6 +639,69 @@
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 
+/* Bot Details Panel */
+.wa-bot-info {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  padding: 12px;
+}
+.wa-bot-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.wa-bot-row:last-child { border-bottom: none; }
+.wa-bot-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.wa-bot-value {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-all;
+}
+.wa-bot-error {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 80, 80, 0.1);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: 0.8rem;
+}
+.wa-bot-hint {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(37, 211, 102, 0.08);
+  border: 1px solid rgba(37, 211, 102, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+.wa-bot-logs {
+  margin-top: 10px;
+}
+.wa-log-box {
+  background: #1a1a2e;
+  color: #a0ffa0;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  max-height: 120px;
+  overflow-y: auto;
+  margin-top: 6px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 @media (max-width: 480px) {
   .wa-modal {
     max-width: 100%;
