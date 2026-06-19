@@ -137,7 +137,6 @@ function setupForms() {
       document.getElementById('items-model').value = '';
       document.getElementById('items-form-panel').classList.remove('active');
       showToast('Success', 'Item added successfully', 'success');
-      sendWhatsAppNotify('items', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -160,13 +159,6 @@ function setupForms() {
       document.getElementById('wallet-amount').value = '';
       document.getElementById('wallet-form-panel').classList.remove('active');
       showToast('Success', 'Wallet entry added', 'success');
-      // Calculate running balance after new entry
-      try {
-        const walletData = await fetchSection('wallet');
-        const balance = walletData.reduce((acc, e) => acc + (e.type === 'in' ? Number(e.amount) : -Number(e.amount)), 0);
-        entryData.balance = balance;
-      } catch { /* balance calc failed, send without it */ }
-      sendWhatsAppNotify('wallet', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -189,7 +181,6 @@ function setupForms() {
       document.getElementById('maintenance-desc').value = '';
       document.getElementById('maintenance-form-panel').classList.remove('active');
       showToast('Success', 'Maintenance entry added', 'success');
-      sendWhatsAppNotify('maintenance', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -213,7 +204,6 @@ function setupForms() {
       document.getElementById('samples-pieces').value = '';
       document.getElementById('samples-form-panel').classList.remove('active');
       showToast('Success', 'Sample entry added', 'success');
-      sendWhatsAppNotify('samples', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -233,7 +223,6 @@ function setupForms() {
       document.getElementById('person-name').value = '';
       document.getElementById('person-form-panel').classList.remove('active');
       showToast('Success', `Worker "${name}" added`, 'success');
-      sendWhatsAppNotify('person', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');
@@ -256,7 +245,6 @@ function setupForms() {
       document.getElementById('clipping-size').value = '';
       document.getElementById('clipping-form-panel').classList.remove('active');
       showToast('Success', 'Clipping entry added', 'success');
-      sendWhatsAppNotify('clipping', entryData);
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');

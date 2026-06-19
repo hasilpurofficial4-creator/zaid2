@@ -128,19 +128,12 @@ export async function sendViaBot(message) {
     });
     const data = await res.json();
     if (data.success) {
-      console.log('[BOT] Message sent via whatsapp-service');
+      console.log('[BOT] ✅ Message sent via whatsapp-service');
       return true;
     }
-    console.warn('[BOT] Send failed:', data.error);
+    console.warn('[BOT] ❌ Send failed:', data.error);
   } catch (e) {
-    console.warn('[BOT] Service offline:', e.message);
-  }
-  // Fallback: clipboard + wa.me
-  try {
-    await navigator.clipboard.writeText(message);
-    window.open('https://wa.me/923244643714', '_blank');
-  } catch {
-    window.open(`https://wa.me/923244643714?text=${encodeURIComponent(message)}`, '_blank');
+    console.warn('[BOT] ❌ Service offline:', e.message);
   }
   return false;
 }

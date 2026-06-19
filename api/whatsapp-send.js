@@ -8,29 +8,41 @@ module.exports = async function handler(req, res) {
   const apiSecret = process.env.WA_API_SECRET || '';
 
   if (!serviceUrl) {
-    return res.status(503).json({ error: 'WA_SERVICE_URL not configured' });
+    console.error('[WA-PROXY] WA_SERVICE_URL not configured');
+    return res.status(503).json({ error: 'WA_SERVICE_URL not configured', success: false });
   }
 
   const { message, to } = req.body;
   if (!message) {
-    return res.status(400).json({ error: 'message required' });
+    return res.status(400).json({ error: 'message required', success: false });
   }
+
+  const targetNumber = to || process.env.ADMIN_NUMBER || '923244643714';
 
   try {
     const targetUrl = serviceUrl.replace(/\/$/, '') + '/send';
+    console.log('[WA-PROXY] Sending to +' + targetNumber + ' via ' + targetUrl);
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     const response = await fetch(targetUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         secret: apiSecret,
         message: message,
-        to: to || process.env.ADMIN_NUMBER || '923244643714'
-      })
+        to: targetNumber
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
+
     const data = await response.json();
-    return res.status(response.status).json(data);
+    console.log('[WA-PROXY] Response: ' + (data.success ? 'queued' : data.error || 'failed'));
+    return res.status(response.ok ? 200 : response.status).json(data);
   } catch (err) {
-    console.error('WA send proxy error:', err.message);
-    return res.status(502).json({ error: 'WhatsApp service unreachable: ' + err.message });
+    console.error('[WA-PROXY] Error: ' + err.message);
+    return res.status(502).json({ success: false, error: 'WhatsApp service unreachable: ' + err.message });
   }
 };

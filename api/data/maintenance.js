@@ -56,7 +56,11 @@ module.exports = async function handler(req, res) {
         entries[idx] = { ...entries[idx], ...body, id: entries[idx].id };
         return entries;
       });
-      return res.status(200).json(updated.find(e => e.id === body.id) || { success: true });
+      const entry = updated.find(e => e.id === body.id);
+      if (entry && entry.status === 'solved') {
+        sendNotifications('Maintenance', `Solved: ${entry.subject}`, entry);
+      }
+      return res.status(200).json(entry || { success: true });
     }
 
     if (req.method === 'DELETE') {
