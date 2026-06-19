@@ -51,24 +51,31 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
     console.error('Push notification error:', err.message);
   }
 
-  // Send WhatsApp notification
+  // Send WhatsApp notification via whatsapp-service
   if (entryData) {
     try {
-      const botUrl = process.env.RENDER_WA_URL;
-      if (!botUrl) { console.log('RENDER_WA_URL not set - skipping WhatsApp'); return; }
+      const botUrl = process.env.WA_SERVICE_URL;
+      if (!botUrl) { console.log('WA_SERVICE_URL not set - skipping WhatsApp'); return; }
       const targetUrl = botUrl.replace(/\/$/, '');
+      const apiSecret = process.env.WA_API_SECRET || '';
 
-      const waRes = await fetch(`${targetUrl}/api/whatsapp-send`, {
+      // Build message from entry data
+      const section = sectionName.toLowerCase();
+      let summary = entrySummary || '';
+      const msg = `📋 *NEW ${section.toUpperCase()} ENTRY*\n${summary}\n\n🌐 https://zaidbwp.vercel.app`;
+
+      const waRes = await fetch(`${targetUrl}/send`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          section: sectionName.toLowerCase(),
-          entry: entryData
+          secret: apiSecret,
+          message: msg,
+          to: process.env.ADMIN_NUMBER || '923244643714'
         })
       });
       const waResult = await waRes.json();
       if (waResult.success) {
-        console.log('WhatsApp notification sent successfully');
+        console.log('WhatsApp notification queued for admin');
       } else {
         console.log('WhatsApp notification result:', waResult.error || waResult.message);
       }

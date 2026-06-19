@@ -118,24 +118,22 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Send WhatsApp message via Render bot (falls back to clipboard + wa.me)
-const BOT_URL = 'https://zaid2.onrender.com';
-
+// Send WhatsApp message via whatsapp-service (Vercel proxy → Render bot)
 export async function sendViaBot(message) {
   try {
-    const res = await fetch(`${BOT_URL}/api/send`, {
+    const res = await fetch('/api/whatsapp-send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message })
     });
     const data = await res.json();
     if (data.success) {
-      console.log('[BOT] Message sent via bot');
+      console.log('[BOT] Message sent via whatsapp-service');
       return true;
     }
     console.warn('[BOT] Send failed:', data.error);
   } catch (e) {
-    console.warn('[BOT] Bot offline:', e.message);
+    console.warn('[BOT] Service offline:', e.message);
   }
   // Fallback: clipboard + wa.me
   try {
