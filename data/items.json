@@ -1370,5 +1370,15 @@
     "person": "SIR NAJAF",
     "status": "available",
     "timestamp": "2026-06-18T06:56:26.244Z"
+  },
+  {
+    "id": "78albt3lp0bnw",
+    "name": "test",
+    "number": "1",
+    "quantity": 1,
+    "model": "2",
+    "person": "zaid",
+    "status": "available",
+    "timestamp": "2026-06-19T15:46:53.046Z"
   }
 ]
