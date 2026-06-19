@@ -42,7 +42,7 @@ module.exports = async function handler(req, res) {
         return entries;
       });
       const newest = updated.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-      sendNotifications('Maintenance', `${newest.category}: ${newest.subject}`, newest);
+      await sendNotifications('Maintenance', `${newest.category}: ${newest.subject}`, newest);
       return res.status(201).json(newest);
     }
 
@@ -58,7 +58,7 @@ module.exports = async function handler(req, res) {
       });
       const entry = updated.find(e => e.id === body.id);
       if (entry && entry.status === 'solved') {
-        sendNotifications('Maintenance', `Solved: ${entry.subject}`, entry);
+        await sendNotifications('Maintenance', `Solved: ${entry.subject}`, entry);
       }
       return res.status(200).json(entry || { success: true });
     }
