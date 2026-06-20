@@ -142,5 +142,22 @@
     "date": "2026-06-20",
     "time": "20:00",
     "timestamp": "2026-06-20T20:00:00.000Z"
+  },
+  {
+    "id": "bill_z84w3xnvdjalw",
+    "personName": "ADNAN OPERATOR",
+    "billPurpose": "STAIONARY",
+    "items": [
+      {
+        "name": "BASKET+TOKRI",
+        "quantity": 4,
+        "model": "LARGE",
+        "price": 3300
+      }
+    ],
+    "totalAmount": 3300,
+    "date": "2026-06-20",
+    "time": "20:00",
+    "timestamp": "2026-06-20T20:00:00.000Z"
   }
 ]
