@@ -257,8 +257,13 @@ function setupForms() {
 
 // Initialize admin page
 const lp = window.__lp || function(){};
-lp(10, 'Authenticating...');
+// Hide loading screen while waiting for password auth
+const loadingEl = document.getElementById('loading-screen');
+if (loadingEl) loadingEl.style.display = 'none';
+
 showPasswordGate(async () => {
+  // Show loading screen again after auth
+  if (loadingEl) loadingEl.style.display = '';
   lp(25, 'Loading sections...');
   await loadAllSections();
   lp(80, 'Setting up forms...');
