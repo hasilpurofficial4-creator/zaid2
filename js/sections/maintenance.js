@@ -90,10 +90,6 @@ export function renderMaintenance(container, data, { isAdmin = false, onRefresh 
       solveBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
         await updateEntry('maintenance', entry.id, { status: 'solved' });
-        // Send WhatsApp notification for solved issue
-        if (typeof window.sendWhatsAppNotify === 'function') {
-          window.sendWhatsAppNotify('maintenance', { ...entry, status: 'solved' });
-        }
         if (onRefresh) onRefresh();
       });
     }

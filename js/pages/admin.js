@@ -128,7 +128,6 @@ function setupForms() {
     };
     try {
       await createEntry('items', entryData);
-      await sendWhatsAppNotify('items', entryData);
       document.getElementById('items-name').value = '';
       document.getElementById('items-number').value = '';
       document.getElementById('items-person').value = '';
@@ -153,7 +152,6 @@ function setupForms() {
     };
     try {
       await createEntry('wallet', entryData);
-      await sendWhatsAppNotify('wallet', entryData);
       document.getElementById('wallet-person').value = '';
       document.getElementById('wallet-amount').value = '';
       document.getElementById('wallet-form-panel').classList.remove('active');
@@ -176,7 +174,6 @@ function setupForms() {
     };
     try {
       await createEntry('maintenance', entryData);
-      await sendWhatsAppNotify('maintenance', entryData);
       document.getElementById('maintenance-subject').value = '';
       document.getElementById('maintenance-desc').value = '';
       document.getElementById('maintenance-form-panel').classList.remove('active');
@@ -199,7 +196,6 @@ function setupForms() {
     };
     try {
       await createEntry('samples', entryData);
-      await sendWhatsAppNotify('samples', entryData);
       document.getElementById('samples-person').value = '';
       document.getElementById('samples-program').value = '';
       document.getElementById('samples-pieces').value = '';
@@ -221,7 +217,6 @@ function setupForms() {
     };
     try {
       await createEntry('person', entryData);
-      await sendWhatsAppNotify('person', entryData);
       document.getElementById('person-name').value = '';
       document.getElementById('person-form-panel').classList.remove('active');
       showToast('Success', `Worker "${name}" added`, 'success');
@@ -243,7 +238,6 @@ function setupForms() {
     };
     try {
       await createEntry('clipping', entryData);
-      await sendWhatsAppNotify('clipping', entryData);
       document.getElementById('clipping-name').value = '';
       document.getElementById('clipping-size').value = '';
       document.getElementById('clipping-form-panel').classList.remove('active');
