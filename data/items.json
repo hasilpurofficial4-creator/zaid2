@@ -1375,7 +1375,7 @@
     "id": "6v2yt2ksg33hf",
     "name": "test item",
     "number": "test 0",
-    "quantity": 1,
+    "quantity": "12",
     "model": "test model",
     "person": "test name",
     "status": "available",
