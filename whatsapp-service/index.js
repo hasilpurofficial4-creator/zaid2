@@ -1,14 +1,13 @@
 /**
- * BANU SAEED HOSPITAL - Clean WhatsApp Bot
- * Replaces the broken obfuscated bot with a clean Baileys-based implementation.
- * 
+ * UNIT STOCK MANAGEMENT - WhatsApp Bot
+ * Full Express API + Baileys WhatsApp bot for stock management.
+ *
  * Features:
- * - Multi-file auth state (session/ folder)
- * - SESSION_ID restoration from env (base64 encoded)
- * - QR code pairing for new sessions
- * - .sendoutbox command to process message queue
- * - Auto-send queue every 30 seconds
- * - .ping / .status commands
+ * - Express API: /send (queue messages), /status (bot health)
+ * - Multi-file auth state with SESSION_ID restoration
+ * - Commands: .items, .items2, .wallet, .wallet2, .person, .person2, etc.
+ * - Auto-send message queue every 30 seconds
+ * - Immediate send when WhatsApp is connected
  */
 
 const {
@@ -26,10 +25,25 @@ const axios = require('axios');
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const PORT = parseInt(process.env.PORT) || 3001;
+const API_SECRET = process.env.API_SECRET || 'banu-saeed-secret-2024';
 const ADMIN_NUMBER = process.env.ADMIN_NUMBER || '923299931199';
+const BOT_NAME = 'UNIT STOCK MANAGEMENT';
+const SITE_URL = 'https://zaidbwp.vercel.app';
 const SESSION_DIR = path.join(__dirname, 'session');
 const OUTBOX_PATH = path.join(__dirname, 'data', 'outbox.json');
 const GITHUB_RAW = 'https://raw.githubusercontent.com/hasilpurofficial4-creator/zaid2/main/data';
+
+let whatsappConnected = false;
+let botRunning = false;
+let sockRef = null;
+let sentCount = 0;
+let botLogs = [];
+function log(msg) {
+  const line = '[' + new Date().toISOString().slice(11, 19) + '] ' + msg;
+  console.log(line);
+  botLogs.push(line);
+  if (botLogs.length > 50) botLogs = botLogs.slice(-50);
+}
 
 // ─── Outbox Helpers ──────────────────────────────────────────────────────────
 
@@ -50,6 +64,131 @@ function writeOutbox(data) {
   }
 }
 
+// ─── Auth Middleware ──────────────────────────────────────────────────────
+
+function authMiddleware(req, res, next) {
+  const secret = req.body && req.body.secret;
+  if (!secret || secret !== API_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+}
+
+// ─── Immediate Send ──────────────────────────────────────────────────────
+
+async function processImmediateSend(sock, entry) {
+  try {
+    const target = entry.to.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+    await sock.sendMessage(target, { text: entry.message });
+    entry.sent = true;
+    entry.sentAt = new Date().toISOString();
+    sentCount++;
+    log('[IMMEDIATE] ✅ Sent to +' + entry.to);
+  } catch (err) {
+    log('[IMMEDIATE] ❌ Failed to +' + entry.to + ': ' + err.message);
+  }
+}
+
+// ─── Text Formatters ─────────────────────────────────────────────────────
+
+const LINE = '══════════════════════════════';
+const DIV  = '──────────────────────────────';
+const FOOTER = '\n' + LINE + '\n🏢 *' + BOT_NAME + '*\n🌐 ' + SITE_URL + '\n📱 Admin: +' + ADMIN_NUMBER;
+
+function formatItemsText(data) {
+  let msg = '📦 ✦ *𝗜𝗧𝗘𝗠𝗦 𝗥𝗘𝗣𝗢𝗥𝗧* ✦ 📦\n' + LINE + '\n';
+  msg += '📊 *Total Items:* ' + data.length + '\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const statusIcon = e.status === 'available' ? '🟢' : e.status === 'in-use' ? '🔵' : '🔴';
+    msg += (i+1) + '. 📦 *' + (e.name || 'N/A') + '*\n';
+    msg += '   🔢 Serial: ' + (e.number || 'N/A') + '\n';
+    msg += '   👤 Person: ' + (e.person || 'N/A') + '\n';
+    msg += '   📐 Model: ' + (e.model || 'N/A') + '\n';
+    msg += '   📦 Qty: ' + (e.quantity || 1) + '\n';
+    msg += '   ' + statusIcon + ' Status: ' + (e.status || 'available') + '\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
+function formatWalletText(data) {
+  const totalIn = data.filter(e => e.type === 'in').reduce((a, e) => a + Number(e.amount || 0), 0);
+  const totalOut = data.filter(e => e.type === 'out').reduce((a, e) => a + Number(e.amount || 0), 0);
+  const balance = totalIn - totalOut;
+  const balEmoji = balance >= 0 ? '✅' : '⚠️';
+  let msg = '💰 ✦ *𝗪𝗔𝗟𝗟𝗘𝗧 𝗥𝗘𝗣𝗢𝗥𝗧* ✦ 💰\n' + LINE + '\n';
+  msg += '📥 *Total Received:* Rs. ' + totalIn.toLocaleString() + '\n';
+  msg += '📤 *Total Spent:* Rs. ' + totalOut.toLocaleString() + '\n';
+  msg += '🏦 *Balance:* ' + balEmoji + ' Rs. ' + balance.toLocaleString() + '\n';
+  msg += '📊 *Entries:* ' + data.length + '\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const icon = e.type === 'in' ? '📥' : '📤';
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString('en-GB') : '';
+    msg += icon + ' *' + (e.type || '').toUpperCase() + '* — Rs. ' + (Number(e.amount)||0).toLocaleString() + '\n';
+    msg += '  👤 ' + (e.personOrPurpose || 'N/A') + '\n  📅 ' + date + '\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
+function formatPersonText(data) {
+  let msg = '👷 ✦ *𝗣𝗘𝗥𝗦𝗢𝗡 𝗔𝗧𝗧𝗘𝗡𝗗𝗔𝗡𝗖𝗘* ✦ 👷\n' + LINE + '\n';
+  msg += '📊 *Total Entries:* ' + data.length + '\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const icon = e.action === 'enter' ? '🟢' : '🔴';
+    const date = e.timestamp ? new Date(e.timestamp).toLocaleString('en-GB') : '';
+    msg += (i+1) + '. 👤 *' + (e.personName || 'N/A') + '*\n';
+    msg += '   ' + icon + ' ' + (e.action === 'enter' ? 'Checked In' : 'Checked Out') + '\n';
+    msg += '   📅 ' + date + '\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
+function formatMaintenanceText(data) {
+  const open = data.filter(e => e.status !== 'solved').length;
+  let msg = '🔧 ✦ *𝗠𝗔𝗜𝗡𝗧𝗘𝗡𝗔𝗡𝗖𝗘 𝗥𝗘𝗣𝗢𝗥𝗧* ✦ 🔧\n' + LINE + '\n';
+  msg += '📊 *Total:* ' + data.length + ' | 🔴 *Open:* ' + open + ' | ✅ *Solved:* ' + (data.length - open) + '\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const statusIcon = e.status === 'solved' ? '✅' : '🔴';
+    msg += (i+1) + '. ' + statusIcon + ' *' + (e.category || 'Issue') + '*\n';
+    msg += '   📝 ' + (e.subject || 'N/A') + '\n';
+    msg += '   📄 ' + (e.description || 'N/A') + '\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
+function formatSamplesText(data) {
+  let msg = '🧪 ✦ *𝗦𝗔𝗠𝗣𝗟𝗘𝗦 𝗥𝗘𝗣𝗢𝗥𝗧* ✦ 🧪\n' + LINE + '\n';
+  msg += '📊 *Total:* ' + data.length + '\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const icon = e.type === 'in' ? '📥' : '📤';
+    msg += (i+1) + '. ' + icon + ' *' + (e.type === 'in' ? 'Sample In' : 'Sample Out') + '*\n';
+    msg += '   👤 ' + (e.personName || 'N/A') + '\n';
+    msg += '   📋 ' + (e.program || 'N/A') + '\n';
+    msg += '   🔢 ' + (e.pieces || 'N/A') + ' pieces\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
+function formatClippingText(data) {
+  const inEntries = data.filter(e => e.type === 'in');
+  let totalSize = 0;
+  inEntries.forEach(e => { const n = parseFloat(e.size); if (!isNaN(n)) totalSize += n; });
+  let msg = '✂️ ✦ *𝗖𝗟𝗜𝗣𝗣𝗜𝗡𝗚 𝗥𝗘𝗣𝗢𝗥𝗧* ✂️\n' + LINE + '\n';
+  msg += '📊 *Total:* ' + data.length + ' | 📏 *Total Size:* ' + totalSize + ' yards\n' + LINE + '\n\n';
+  data.forEach((e, i) => {
+    const icon = e.type === 'in' ? '📥' : e.type === 'transfer' ? '💸' : '📤';
+    msg += (i+1) + '. ' + icon + ' *' + (e.clipperName || 'N/A') + '*\n';
+    msg += '   📏 ' + (e.size || 'N/A') + ' yards\n';
+    msg += '   🏷️ ' + (e.type || 'N/A') + '\n';
+    if (i < data.length - 1) msg += DIV + '\n';
+  });
+  return msg + FOOTER;
+}
+
 // ─── Stock Manager Helpers ───────────────────────────────────────────────────
 
 async function fetchStockData(section) {
@@ -60,6 +199,16 @@ async function fetchStockData(section) {
     console.error('[STOCK] Fetch ' + section + ' error:', err.message);
     return [];
   }
+}
+
+async function addExcelFooter(ws) {
+  ws.addRow({});
+  const footerRow1 = ws.addRow({ no: '', name: BOT_NAME });
+  footerRow1.font = { bold: true, size: 11, color: { argb: 'FF25D366' } };
+  const footerRow2 = ws.addRow({ no: '', name: SITE_URL });
+  footerRow2.font = { color: { argb: 'FF0066CC' }, underline: true };
+  const footerRow3 = ws.addRow({ no: '', name: 'Admin: +' + ADMIN_NUMBER });
+  footerRow3.font = { italic: true, color: { argb: 'FF666666' } };
 }
 
 async function generateItemsXlsx(data) {
@@ -89,6 +238,7 @@ async function generateItemsXlsx(data) {
       timestamp: e.timestamp ? new Date(e.timestamp).toLocaleDateString('en-GB') : ''
     });
   });
+  await addExcelFooter(ws);
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
@@ -128,6 +278,7 @@ async function generateWalletXlsx(data) {
   sumRow2.font = { bold: true, color: { argb: 'FFCC0000' } };
   const sumRow3 = ws.addRow({ type: '', personOrPurpose: 'BALANCE', amount: balance });
   sumRow3.font = { bold: true, size: 14 };
+  await addExcelFooter(ws);
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
@@ -151,6 +302,7 @@ async function generatePersonXlsx(data) {
       timestamp: e.timestamp ? new Date(e.timestamp).toLocaleString('en-GB') : ''
     });
   });
+  await addExcelFooter(ws);
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
@@ -172,6 +324,7 @@ async function generateGenericXlsx(section, data) {
     keys.forEach(k => { row[k] = e[k] != null ? String(e[k]) : ''; });
     ws.addRow(row);
   });
+  await addExcelFooter(ws);
   const buf = await wb.xlsx.writeBuffer();
   return Buffer.from(buf);
 }
@@ -322,7 +475,7 @@ async function startBot() {
     auth: state,
     logger: pino({ level: 'silent' }),
     printQRInTerminal: true,
-    browser: ['Banu Saeed Hospital', 'Chrome', '1.0.0'],
+    browser: [BOT_NAME, 'Chrome', '1.0.0'],
     generateHighQualityLinkPreview: false,
   });
 
@@ -338,15 +491,18 @@ async function startBot() {
     }
 
     if (connection === 'open') {
-      console.log('═══════════════════════════════════════════');
-      console.log('  WhatsApp Bot CONNECTED');
-      console.log('  Account: ' + (sock.user?.id || 'unknown'));
-      console.log('═══════════════════════════════════════════');
+      whatsappConnected = true;
+      botRunning = true;
+      sockRef = sock;
+      log('═══════════════════════════════════════════');
+      log('  WhatsApp Bot CONNECTED');
+      log('  Account: ' + (sock.user?.id || 'unknown'));
+      log('═══════════════════════════════════════════');
 
       // Process outbox immediately on connect
       const result = await processOutbox(sock);
       if (result.processed > 0) {
-        console.log('[OUTBOX] Initial send: ' + result.processed + ' sent, ' + result.failed + ' failed');
+        log('[OUTBOX] Initial send: ' + result.processed + ' sent, ' + result.failed + ' failed');
       }
 
       // Auto-process every 30 seconds
@@ -354,17 +510,19 @@ async function startBot() {
         try {
           const r = await processOutbox(sock);
           if (r.processed > 0) {
-            console.log('[OUTBOX] Auto-send: ' + r.processed + ' sent');
+            log('[OUTBOX] Auto-send: ' + r.processed + ' sent');
           }
         } catch (err) {
-          console.error('[OUTBOX] Auto-send error:', err.message);
+          log('[OUTBOX] Auto-send error: ' + err.message);
         }
       }, 30000);
     }
 
     if (connection === 'close') {
+      whatsappConnected = false;
+      sockRef = null;
       const reason = lastDisconnect?.error?.output?.statusCode;
-      console.log('[CONN] Connection closed. Reason code: ' + reason);
+      log('[CONN] Connection closed. Reason code: ' + reason);
 
       if (reason === DisconnectReason.loggedOut) {
         console.log('[CONN] Session LOGGED OUT (401).');
@@ -415,7 +573,7 @@ async function startBot() {
         await sock.sendMessage(chatId, { text: 'Pong!' });
         const latency = Date.now() - start;
         await sock.sendMessage(chatId, {
-          text: '*BANU SAEED HOSPITAL Bot*\nLatency: ' + latency + 'ms\nStatus: Online'
+          text: '*' + BOT_NAME + ' Bot*\nLatency: ' + latency + 'ms\nStatus: Online'
         });
       }
 
@@ -446,7 +604,7 @@ async function startBot() {
         const outbox = readOutbox();
         const pending = outbox.filter(m => !m.sent).length;
         await sock.sendMessage(chatId, {
-          text: '*BANU SAEED HOSPITAL*\nBot: Online\nAccount: ' + (sock.user?.id || 'unknown') + '\nPending messages: ' + pending + '\nUptime: ' + Math.floor(process.uptime()) + 's'
+          text: '*' + BOT_NAME + '*\nBot: Online\nAccount: ' + (sock.user?.id || 'unknown') + '\nPending messages: ' + pending + '\nUptime: ' + Math.floor(process.uptime()) + 's'
         });
       }
 
@@ -468,9 +626,17 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'items.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '📦 *ITEMS* (' + data.length + ' entries)\n📅 ' + new Date().toLocaleDateString('en-GB')
+          caption: '📦 *ITEMS* (' + data.length + ' entries)\n📅 ' + new Date().toLocaleDateString('en-GB') + '\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
+      }
+
+      // .items2 - send items as formatted text
+      if (cmd === '.items2') {
+        await sock.sendMessage(chatId, { text: '📦 Fetching items text...' });
+        const data = await fetchStockData('items');
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No items data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatItemsText(data) });
       }
 
       // .wallet - send wallet.xlsx
@@ -492,40 +658,16 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'wallet.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '💰 *WALLET*\n📥 Received: Rs. ' + totalIn.toLocaleString() + '\n📤 Spent: Rs. ' + totalOut.toLocaleString() + '\n🏦 Balance: Rs. ' + balance.toLocaleString()
+          caption: '💰 *WALLET*\n📥 Received: Rs. ' + totalIn.toLocaleString() + '\n📤 Spent: Rs. ' + totalOut.toLocaleString() + '\n🏦 Balance: Rs. ' + balance.toLocaleString() + '\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
       }
 
-      // .wallettxt - send all wallet details as formatted text
-      if (cmd === '.wallettxt') {
+      // .wallet2 / .wallettxt - send wallet as formatted text
+      if (cmd === '.wallet2' || cmd === '.wallettxt') {
         const data = await fetchStockData('wallet');
-        if (!data.length) {
-          await sock.sendMessage(chatId, { text: '❌ No wallet data found.' });
-          return;
-        }
-        const totalIn = data.filter(e => e.type === 'in').reduce((a, e) => a + Number(e.amount || 0), 0);
-        const totalOut = data.filter(e => e.type === 'out').reduce((a, e) => a + Number(e.amount || 0), 0);
-        const balance = totalIn - totalOut;
-        const balEmoji = balance >= 0 ? '✅' : '⚠️';
-        const line = '══════════════════════════════';
-        const div = '──────────────────────────────';
-        let msg = '💰 ✦ *𝗪𝗔𝗟𝗟𝗘𝗧 𝗥𝗘𝗣𝗢𝗥𝗧* ✦ 💰\n' + line + '\n';
-        msg += '📥 *𝗧𝗼𝗧𝗮𝗹 𝗥𝗲𝗰𝗲𝗶𝘃𝗲𝗱:* Rs. ' + totalIn.toLocaleString() + '\n';
-        msg += '📤 *𝗧𝗼𝗧𝗮𝗹 𝗦𝗽𝗲𝗻𝘁:* Rs. ' + totalOut.toLocaleString() + '\n';
-        msg += '🏦 *𝗕𝗮𝗹𝗮𝗻𝗰𝗲:* ' + balEmoji + ' Rs. ' + balance.toLocaleString() + '\n';
-        msg += '📊 *𝗘𝗻𝘁𝗿𝗶𝗲𝘀:* ' + data.length + '\n' + line + '\n\n';
-        data.forEach((e, i) => {
-          const amt = Number(e.amount) || 0;
-          const icon = e.type === 'in' ? '📥' : '📤';
-          const date = e.timestamp ? new Date(e.timestamp).toLocaleDateString('en-GB') : '';
-          msg += icon + ' *' + (e.type || '').toUpperCase() + '* — Rs. ' + amt.toLocaleString() + '\n';
-          msg += '  👤 ' + (e.personOrPurpose || 'N/A') + '\n';
-          msg += '  📅 ' + date + '\n';
-          if (i < data.length - 1) msg += div + '\n';
-        });
-        msg += '\n' + line + '\n👨‍💻 *𝗭𝗔𝗜𝗗 𝗕𝗪𝗣 𝗗𝗘𝗩𝗘𝗟𝗢𝗣𝗘𝗥*\n🌐 https://zaidbwp.vercel.app';
-        await sock.sendMessage(chatId, { text: msg });
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No wallet data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatWalletText(data) });
       }
 
       // .person - send person.xlsx
@@ -544,9 +686,17 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'person.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '👷 *PERSON ATTENDANCE* (' + data.length + ' entries)'
+          caption: '👷 *PERSON ATTENDANCE* (' + data.length + ' entries)\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
+      }
+
+      // .person2 - send person as formatted text
+      if (cmd === '.person2') {
+        await sock.sendMessage(chatId, { text: '👷 Fetching person text...' });
+        const data = await fetchStockData('person');
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No person data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatPersonText(data) });
       }
 
       // .maintenance - send maintenance.xlsx
@@ -566,9 +716,17 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'maintenance.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '🔧 *MAINTENANCE* (' + data.length + ' issues | 🔴 ' + open + ' open | ✅ ' + (data.length - open) + ' solved)'
+          caption: '🔧 *MAINTENANCE* (' + data.length + ' issues | 🔴 ' + open + ' open | ✅ ' + (data.length - open) + ' solved)\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
+      }
+
+      // .maintenance2 - send maintenance as formatted text
+      if (cmd === '.maintenance2') {
+        await sock.sendMessage(chatId, { text: '🔧 Fetching maintenance text...' });
+        const data = await fetchStockData('maintenance');
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No maintenance data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatMaintenanceText(data) });
       }
 
       // .samples - send samples.xlsx
@@ -587,9 +745,17 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'samples.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '🧪 *SAMPLES* (' + data.length + ' entries)'
+          caption: '🧪 *SAMPLES* (' + data.length + ' entries)\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
+      }
+
+      // .samples2 - send samples as formatted text
+      if (cmd === '.samples2') {
+        await sock.sendMessage(chatId, { text: '🧪 Fetching samples text...' });
+        const data = await fetchStockData('samples');
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No samples data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatSamplesText(data) });
       }
 
       // .clipping - send clipping.xlsx
@@ -612,30 +778,43 @@ async function startBot() {
           document: fs.readFileSync(tmpFile),
           fileName: 'clipping.xlsx',
           mimetype: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-          caption: '✂️ *CLIPPING* (' + data.length + ' entries | ' + totalSize + ' yards | 💰 Rs. ' + totalPayment.toLocaleString() + ')'
+          caption: '✂️ *CLIPPING* (' + data.length + ' entries | ' + totalSize + ' yards | 💰 Rs. ' + totalPayment.toLocaleString() + ')\n🏢 ' + BOT_NAME
         });
         fs.unlinkSync(tmpFile);
       }
 
-      // .stock - show all stock commands help
+      // .clipping2 - send clipping as formatted text
+      if (cmd === '.clipping2') {
+        await sock.sendMessage(chatId, { text: '✂️ Fetching clipping text...' });
+        const data = await fetchStockData('clipping');
+        if (!data.length) { await sock.sendMessage(chatId, { text: '❌ No clipping data found.' }); return; }
+        await sock.sendMessage(chatId, { text: formatClippingText(data) });
+      }
+
+      // .stock / .help - show all commands
       if (cmd === '.stock' || cmd === '.help') {
         const helpMsg = [
-          '🤖 *𝗭𝗔𝗜𝗗 𝗕𝗪𝗣 𝗦𝗧𝗢𝗖𝗞 𝗕𝗢𝗧*',
-          '══════════════════════════════',
-          '📦 *.items* — Send items.xlsx',
-          '💰 *.wallet* — Send wallet.xlsx',
-          '📝 *.wallettxt* — Wallet details (text)',
-          '👷 *.person* — Send attendance.xlsx',
-          '🔧 *.maintenance* — Send maintenance.xlsx',
-          '🧪 *.samples* — Send samples.xlsx',
-          '✂️ *.clipping* — Send clipping.xlsx',
-          '──────────────────────────────',
+          '🤖 *' + BOT_NAME + '*',
+          LINE,
+          '📦 *.items* — Items Excel file',
+          '📝 *.items2* — Items text details',
+          '💰 *.wallet* — Wallet Excel file',
+          '📝 *.wallet2* — Wallet text details',
+          '👷 *.person* — Attendance Excel',
+          '📝 *.person2* — Attendance text',
+          '🔧 *.maintenance* — Maintenance Excel',
+          '📝 *.maintenance2* — Maintenance text',
+          '🧪 *.samples* — Samples Excel',
+          '📝 *.samples2* — Samples text',
+          '✂️ *.clipping* — Clipping Excel',
+          '📝 *.clipping2* — Clipping text',
+          DIV,
           '📌 *.ping* — Check latency',
           '📌 *.status* — Bot status',
           '📌 *.sendoutbox* — Process queue',
-          '══════════════════════════════',
-          '👨‍💻 _ZAID ASHIQ BWP_',
-          '🌐 https://zaidbwp.vercel.app'
+          LINE,
+          '🌐 ' + SITE_URL,
+          '📱 Admin: +' + ADMIN_NUMBER
         ].join('\n');
         await sock.sendMessage(chatId, { text: helpMsg });
       }
@@ -649,33 +828,68 @@ async function startBot() {
   });
 }
 
-// ─── Minimal Express for health check (bot's own port) ───────────────────────
+// ─── Express API (starts FIRST, then bot) ──────────────────────────────────
 
-const botApp = express();
-botApp.get('/', (req, res) => {
-  res.json({ bot: 'running', uptime: Math.floor(process.uptime()) + 's' });
+const app = express();
+app.use(express.json());
+
+app.get('/', (req, res) => {
+  res.json({
+    bot: BOT_NAME,
+    online: true,
+    whatsappConnected,
+    uptime: Math.floor(process.uptime()) + 's'
+  });
 });
 
-botApp.listen(PORT, () => {
-  console.log('[BOT] Express health check on port ' + PORT);
+app.get('/status', (req, res) => {
+  const outbox = readOutbox();
+  res.json({
+    bot: BOT_NAME,
+    online: true,
+    botRunning,
+    whatsappConnected,
+    pendingMessages: outbox.filter(m => !m.sent).length,
+    sentMessages: sentCount,
+    adminNumber: ADMIN_NUMBER,
+    uptime: Math.floor(process.uptime()) + 's',
+    recentLogs: botLogs.slice(-10)
+  });
 });
 
-// ─── Start ───────────────────────────────────────────────────────────────────
-
-console.log('═══════════════════════════════════════════════');
-console.log('  BANU SAEED HOSPITAL - WhatsApp Bot');
-console.log('  Admin: +' + ADMIN_NUMBER);
-console.log('═══════════════════════════════════════════════');
-
-startBot().catch(err => {
-  console.error('[FATAL] Bot failed to start:', err.message);
-  process.exit(1);
+app.post('/send', authMiddleware, (req, res) => {
+  const { message, to } = req.body;
+  if (!message) return res.status(400).json({ error: 'message required' });
+  const target = to || ADMIN_NUMBER;
+  const entry = {
+    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8),
+    to: target,
+    message,
+    queuedAt: new Date().toISOString(),
+    sent: false
+  };
+  const outbox = readOutbox();
+  outbox.push(entry);
+  writeOutbox(outbox);
+  log('[API] Queued message for +' + target);
+  if (whatsappConnected && sockRef) {
+    processImmediateSend(sockRef, entry).catch(err => {
+      log('[API] Immediate send failed: ' + err.message);
+    });
+  }
+  res.json({ success: true, message: 'Message queued for +' + target, id: entry.id });
 });
 
-// Prevent crashes
+const PORT_START = PORT;
+app.listen(PORT_START, () => {
+  log('[SERVER] ✅ API listening on port ' + PORT_START);
+  startBot().catch(err => { log('[FATAL] Bot failed: ' + err.message); });
+});
+
+// ─── Prevent crashes ───────────────────────────────────────────────────────
 process.on('uncaughtException', (err) => {
-  console.error('[BOT] Uncaught:', err.message);
+  log('[BOT] Uncaught: ' + err.message);
 });
 process.on('unhandledRejection', (reason) => {
-  console.error('[BOT] Unhandled rejection:', reason);
+  log('[BOT] Unhandled rejection: ' + reason);
 });

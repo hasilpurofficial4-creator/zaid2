@@ -70,7 +70,7 @@ function buildWhatsAppMessage(section, entry) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${LINE}\n${body}\n${DIV}\n🏢 *${BOT_NAME}*\n📅 ${dateStr}  ⏰ ${timeStr}\n${DIV}\n🌐 *View Details:*\n${pageUrl}\n${END}`;
+  return `${title}\n${LINE}\n${body}\n${DIV}\n🏢 *${BOT_NAME}*\n📅 ${dateStr}  ⏰ ${timeStr}\n${DIV}\n🌐 *View Details:*\n${pageUrl}\n🔗 https://zaidbwp.vercel.app\n📱 Admin: +923299931199\n${END}`;
 }
 
 function sendWhatsAppNotify(section, entry) {
@@ -128,6 +128,7 @@ function setupForms() {
     };
     try {
       await createEntry('items', entryData);
+      sendWhatsAppNotify('items', entryData);
       document.getElementById('items-name').value = '';
       document.getElementById('items-number').value = '';
       document.getElementById('items-person').value = '';
@@ -152,6 +153,7 @@ function setupForms() {
     };
     try {
       await createEntry('wallet', entryData);
+      sendWhatsAppNotify('wallet', entryData);
       document.getElementById('wallet-person').value = '';
       document.getElementById('wallet-amount').value = '';
       document.getElementById('wallet-form-panel').classList.remove('active');
@@ -174,6 +176,7 @@ function setupForms() {
     };
     try {
       await createEntry('maintenance', entryData);
+      sendWhatsAppNotify('maintenance', entryData);
       document.getElementById('maintenance-subject').value = '';
       document.getElementById('maintenance-desc').value = '';
       document.getElementById('maintenance-form-panel').classList.remove('active');
@@ -196,6 +199,7 @@ function setupForms() {
     };
     try {
       await createEntry('samples', entryData);
+      sendWhatsAppNotify('samples', entryData);
       document.getElementById('samples-person').value = '';
       document.getElementById('samples-program').value = '';
       document.getElementById('samples-pieces').value = '';
@@ -217,6 +221,7 @@ function setupForms() {
     };
     try {
       await createEntry('person', entryData);
+      sendWhatsAppNotify('person', entryData);
       document.getElementById('person-name').value = '';
       document.getElementById('person-form-panel').classList.remove('active');
       showToast('Success', `Worker "${name}" added`, 'success');
@@ -238,6 +243,7 @@ function setupForms() {
     };
     try {
       await createEntry('clipping', entryData);
+      sendWhatsAppNotify('clipping', entryData);
       document.getElementById('clipping-name').value = '';
       document.getElementById('clipping-size').value = '';
       document.getElementById('clipping-form-panel').classList.remove('active');

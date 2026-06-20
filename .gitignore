@@ -46,3 +46,19 @@ htmlcov/
 
 # Pytest cache
 .pytest_cache/
+.env*
+
+# Vercel temp
+.vercel/
+.vercel-tmp/
+
+# Temp files
+_create_bot_repo.js
+_err.txt
+_fix_and_deploy.js
+_fix_json.js
+_fix_render.js
+_fix_vercel.js
+_get_token.js
+_git_deploy.js
+_out.txt

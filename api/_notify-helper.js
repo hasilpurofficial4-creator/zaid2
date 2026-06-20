@@ -98,6 +98,8 @@ function buildWhatsAppMessage(sectionName, entrySummary, entryData) {
     DIV,
     `🌐 *View Details:*`,
     pageUrl,
+    `🔗 ${SITE_URL}`,
+    `📱 Admin: +${process.env.ADMIN_NUMBER || '923291001302'}`,
     END
   ].join('\n');
 }
@@ -166,6 +168,9 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
 
     console.log('[WA] Sending to +' + adminNumber + ' via ' + targetUrl);
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+
     const waRes = await fetch(`${targetUrl}/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -173,8 +178,10 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
         secret: apiSecret,
         message: msg,
         to: adminNumber
-      })
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
 
     if (!waRes.ok) {
       const errText = await waRes.text();
