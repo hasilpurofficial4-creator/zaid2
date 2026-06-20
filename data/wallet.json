@@ -201,5 +201,12 @@
     "personOrPurpose": "CLIPPER/AHMAD",
     "amount": 800,
     "timestamp": "2026-06-20T20:44:00.494Z"
+  },
+  {
+    "id": "wlt_20lb4nprcxfbr",
+    "type": "out",
+    "personOrPurpose": "DISH WASH KIT",
+    "amount": 300,
+    "timestamp": "2026-06-20T20:44:21.663Z"
   }
 ]
