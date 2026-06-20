@@ -1379,7 +1379,7 @@
     "model": null,
     "person": "ADNAN",
     "status": "available",
-    "timestamp": "2026-06-18T06:03:23.873Z" ////////////////
+    "timestamp": "2026-06-18T06:03:23.873Z"
   },
   {
     "id": "71jkxig0dsfft6",
@@ -1400,25 +1400,5 @@
     "person": "33",
     "status": "available",
     "timestamp": "2026-06-18T06:03:23.873Z"
-  },
-  {
-    "id": "71jkxft6exqt6",
-    "name": "thread",
-    "number": "",
-    "quantity": 1,
-    "model": "33",
-    "person": "33",
-    "status": "available",
-    "timestamp": "2026-06-18T06:03:23.873Z"
-  },
-  {
-    "id": "c896iqc4c2vag",
-    "name": "test item",
-    "number": "0329",
-    "quantity": 1,
-    "model": "unkown",
-    "person": "zaid",
-    "status": "available",
-    "timestamp": "2026-06-20T07:40:51.272Z"
   }
 ]
