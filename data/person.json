@@ -234,12 +234,6 @@
     "timestamp": "2026-06-20T03:00:00.000Z"
   },
   {
-    "id": "prs_fix_042",
-    "personName": "ADNAN",
-    "action": "exit",
-    "timestamp": "2026-06-20T15:00:00.000Z"
-  },
-  {
     "id": "prs_fix_043",
     "personName": "SHERRY",
     "action": "enter",
