@@ -9,6 +9,9 @@ initTheme();
 
 const WA_TARGET = '923244643714';
 const sectionData = {}; // Cache for fetched data
+const lp = window.__lp || function(){};
+
+lp(10, 'Fetching data...');
 
 // Build a section-specific summary message for WhatsApp
 function buildSectionSummary(section) {
@@ -110,12 +113,15 @@ function sendSectionSummary(section) {
 // Quick stats for the hub
 async function loadHubStats() {
   try {
+    lp(15, 'Loading items & wallet...');
     const [items, wallet, person, maintenance] = await Promise.all([
       fetchSection('items'),
       fetchSection('wallet'),
       fetchSection('person'),
       fetchSection('maintenance')
     ]);
+
+    lp(40, 'Loading attendance & issues...');
 
     // Cache data for summary builder
     sectionData.items = items;
@@ -154,6 +160,8 @@ async function loadHubStats() {
     const badgeMaint = document.getElementById('badge-maintenance');
     if (badgeMaint) badgeMaint.textContent = openIssues + ' open';
 
+    lp(55, 'Loading samples & clipping...');
+
     // Samples & clipping badges
     const [samples, clipping] = await Promise.all([
       fetchSection('samples'),
@@ -169,9 +177,130 @@ async function loadHubStats() {
     const badgeClipping = document.getElementById('badge-clipping');
     if (badgeClipping) badgeClipping.textContent = clipping.length;
 
+    lp(75, 'Building dashboard...');
+
+    // Build salary calculator
+    buildSalaryCalculator(person);
+
+    lp(100, 'Dashboard ready!');
+
   } catch (err) {
     console.error('Error loading hub stats:', err);
+    lp(100, 'Loaded with errors');
   }
+}
+
+// ==================== Salary Calculator ====================
+function buildSalaryCalculator(personData) {
+  const hubGrid = document.querySelector('.hub-grid');
+  if (!hubGrid) return;
+
+  // Remove existing calculator if any
+  const existing = document.getElementById('salary-card');
+  if (existing) existing.remove();
+
+  const workers = [...new Set(personData.map(e => e.personName).filter(Boolean))].sort();
+  if (!workers.length) return;
+
+  const card = document.createElement('div');
+  card.id = 'salary-card';
+  card.style.cssText = 'grid-column:1/-1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-lg);animation:fadeInUp 0.4s ease;';
+
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;">💰</div>
+      <div>
+        <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);">Salary Calculator</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);">Calculate salary based on days worked</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;">
+      <div style="flex:1;min-width:120px;">
+        <label style="font-size:0.7rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Worker</label>
+        <select id="salary-worker" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:0.85rem;background:var(--bg-card);color:var(--text-primary);">
+          ${workers.map(w => `<option value="${w}">${w}</option>`).join('')}
+        </select>
+      </div>
+      <div style="flex:1;min-width:120px;">
+        <label style="font-size:0.7rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Monthly Salary (Rs.)</label>
+        <input type="number" id="salary-amount" placeholder="25000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:0.85rem;background:var(--bg-card);color:var(--text-primary);">
+      </div>
+      <button id="salary-calc-btn" class="btn btn-primary" style="padding:10px 20px;white-space:nowrap;">Calculate</button>
+    </div>
+    <div id="salary-result" style="display:none;margin-top:14px;"></div>
+  `;
+
+  hubGrid.parentNode.insertBefore(card, hubGrid.nextSibling);
+
+  document.getElementById('salary-calc-btn').addEventListener('click', () => {
+    const workerName = document.getElementById('salary-worker').value;
+    const monthlySalary = parseFloat(document.getElementById('salary-amount').value);
+    if (!workerName || isNaN(monthlySalary) || monthlySalary <= 0) return;
+    calculateWorkerSalary(workerName, monthlySalary, personData);
+  });
+}
+
+function calculateWorkerSalary(workerName, monthlySalary, personData) {
+  const result = document.getElementById('salary-result');
+  if (!result) return;
+
+  const today = new Date();
+  const currentDay = today.getDate();
+  let periodStart, periodEnd, dividerMonth;
+
+  if (currentDay <= 5) {
+    periodStart = new Date(today.getFullYear(), today.getMonth() - 1, 6);
+    periodEnd = new Date(today.getFullYear(), today.getMonth(), 5, 23, 59, 59, 999);
+    dividerMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  } else {
+    periodStart = new Date(today.getFullYear(), today.getMonth(), 6);
+    periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 5, 23, 59, 59, 999);
+    dividerMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  const daysInMonth = new Date(dividerMonth.getFullYear(), dividerMonth.getMonth() + 1, 0).getDate();
+  const monthName = dividerMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  // Count days worked
+  const enterEntries = personData
+    .filter(e => e.personName === workerName && e.action === 'enter')
+    .map(e => ({ ...e, _date: new Date(e.timestamp) }))
+    .filter(e => e._date >= periodStart && e._date <= periodEnd);
+
+  const workDates = new Set();
+  enterEntries.forEach(e => workDates.add(e._date.toDateString()));
+  const daysWorked = workDates.size;
+
+  const dailyRate = monthlySalary / daysInMonth;
+  const earnedSalary = Math.round(dailyRate * daysWorked);
+  const periodStartStr = periodStart.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+  const periodEndStr = periodEnd.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  result.style.display = 'block';
+  result.innerHTML = `
+    <div style="background:var(--bg-secondary);border-radius:var(--radius);padding:14px;border:1px solid var(--border);">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-bottom:12px;">
+        <div>
+          <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Days Worked</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--accent);font-family:var(--font-mono);">${daysWorked}</div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Daily Rate</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--info);font-family:var(--font-mono);">Rs. ${Math.round(dailyRate).toLocaleString()}</div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Total Salary</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--success);font-family:var(--font-mono);">Rs. ${earnedSalary.toLocaleString()}</div>
+        </div>
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-secondary);text-align:center;">
+        👤 <strong>${workerName}</strong> • 💰 Rs. ${monthlySalary.toLocaleString()}/month • 📅 ${periodStartStr} — ${periodEndStr} • 📆 ${monthName} (${daysInMonth} days)
+      </div>
+      <div style="font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:6px;">
+        Formula: ${daysWorked} days × Rs. ${Math.round(dailyRate).toLocaleString()} = <strong style="color:var(--success);">Rs. ${earnedSalary.toLocaleString()}</strong>
+      </div>
+    </div>
+  `;
 }
 
 // Animate cards on load
@@ -202,8 +331,46 @@ setupForwardButtons();
 initNotifications();
 setupInstallPrompt();
 
-// Poll stats every 30 seconds
-setInterval(loadHubStats, 30000);
+// Poll stats every 30 seconds (skip loading screen on refresh)
+setInterval(async () => {
+  try {
+    const [items, wallet, person, maintenance, samples, clipping] = await Promise.all([
+      fetchSection('items'), fetchSection('wallet'), fetchSection('person'),
+      fetchSection('maintenance'), fetchSection('samples'), fetchSection('clipping')
+    ]);
+    sectionData.items = items; sectionData.wallet = wallet; sectionData.person = person;
+    sectionData.maintenance = maintenance; sectionData.samples = samples; sectionData.clipping = clipping;
+
+    const itemsEl = document.getElementById('stat-items');
+    if (itemsEl) itemsEl.textContent = items.length;
+    const badgeItems = document.getElementById('badge-items');
+    if (badgeItems) badgeItems.textContent = items.length;
+
+    const balance = wallet.reduce((acc, e) => acc + (e.type === 'in' ? Number(e.amount) : -Number(e.amount)), 0);
+    const walletEl = document.getElementById('stat-wallet');
+    if (walletEl) { walletEl.textContent = formatCurrency(balance); walletEl.style.color = balance >= 0 ? 'var(--success)' : 'var(--danger)'; }
+    const badgeWallet = document.getElementById('badge-wallet');
+    if (badgeWallet) badgeWallet.textContent = formatCurrency(balance);
+
+    const today = new Date().toDateString();
+    const todayCount = person.filter(e => new Date(e.timestamp).toDateString() === today).length;
+    const activityEl = document.getElementById('stat-activity');
+    if (activityEl) activityEl.textContent = todayCount;
+    const badgePerson = document.getElementById('badge-person');
+    if (badgePerson) badgePerson.textContent = todayCount + ' today';
+
+    const openIssues = maintenance.filter(e => e.status !== 'solved').length;
+    const issuesEl = document.getElementById('stat-issues');
+    if (issuesEl) issuesEl.textContent = openIssues;
+    const badgeMaint = document.getElementById('badge-maintenance');
+    if (badgeMaint) badgeMaint.textContent = openIssues + ' open';
+
+    const badgeSamples = document.getElementById('badge-samples');
+    if (badgeSamples) badgeSamples.textContent = samples.length;
+    const badgeClipping = document.getElementById('badge-clipping');
+    if (badgeClipping) badgeClipping.textContent = clipping.length;
+  } catch {}
+}, 30000);
 
 // Register SW
 if ('serviceWorker' in navigator) {

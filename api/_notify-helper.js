@@ -99,7 +99,7 @@ function buildWhatsAppMessage(sectionName, entrySummary, entryData) {
     `🌐 *View Details:*`,
     pageUrl,
     `🔗 ${SITE_URL}`,
-    `📱 Admin: +${process.env.ADMIN_NUMBER || '923291001302'}`,
+    `📱 Admin: +${(process.env.ADMIN_NUMBER || '923299931199').split(',')[0].trim()}`,
     END
   ].join('\n');
 }
@@ -153,7 +153,7 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
     console.error('Push notification error:', err.message);
   }
 
-  // Send WhatsApp notification via Railway whatsapp-service
+  // Send WhatsApp notification via Railway whatsapp-service to ALL admins
   try {
     const botUrl = process.env.WA_SERVICE_URL;
     if (!botUrl) {
@@ -162,39 +162,49 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
     }
     const targetUrl = botUrl.replace(/\/$/, '');
     const apiSecret = process.env.WA_API_SECRET || 'banu-saeed-secret-2024';
-    const adminNumber = process.env.ADMIN_NUMBER || '923291001302';
+    // Support comma-separated admin numbers
+    const adminNumbers = (process.env.ADMIN_NUMBER || '923299931199')
+      .split(',').map(n => n.trim()).filter(Boolean);
 
     const msg = buildWhatsAppMessage(sectionName, entrySummary, entryData);
 
-    console.log('[WA] Sending to +' + adminNumber + ' via ' + targetUrl);
+    // Send to ALL admin numbers in parallel
+    const sendPromises = adminNumbers.map(async (adminNumber) => {
+      try {
+        console.log('[WA] Sending to +' + adminNumber + ' via ' + targetUrl);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+        const waRes = await fetch(`${targetUrl}/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: apiSecret,
+            message: msg,
+            to: adminNumber
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
 
-    const waRes = await fetch(`${targetUrl}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        secret: apiSecret,
-        message: msg,
-        to: adminNumber
-      }),
-      signal: controller.signal
+        if (!waRes.ok) {
+          const errText = await waRes.text();
+          console.error('[WA] HTTP ' + waRes.status + ' for +' + adminNumber + ': ' + errText);
+          return;
+        }
+
+        const waResult = await waRes.json();
+        if (waResult.success) {
+          console.log('[WA] ✅ Notification queued for +' + adminNumber);
+        } else {
+          console.log('[WA] ❌ Queue failed for +' + adminNumber + ': ' + (waResult.error || waResult.message || 'unknown'));
+        }
+      } catch (err) {
+        console.error('[WA] Failed for +' + adminNumber + ': ' + err.message);
+      }
     });
-    clearTimeout(timeout);
 
-    if (!waRes.ok) {
-      const errText = await waRes.text();
-      console.error('[WA] HTTP ' + waRes.status + ': ' + errText);
-      return;
-    }
-
-    const waResult = await waRes.json();
-    if (waResult.success) {
-      console.log('[WA] ✅ Notification queued for +' + adminNumber);
-    } else {
-      console.log('[WA] ❌ Queue failed: ' + (waResult.error || waResult.message || 'unknown'));
-    }
+    await Promise.all(sendPromises);
   } catch (err) {
     console.error('[WA] Notification error: ' + err.message);
   }

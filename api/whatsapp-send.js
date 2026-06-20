@@ -17,30 +17,52 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'message required', success: false });
   }
 
-  const targetNumber = to || process.env.ADMIN_NUMBER || '923291001302';
+  const targetUrl = serviceUrl.replace(/\/$/, '') + '/send';
+
+  // If specific 'to' number, send to that one; otherwise send to ALL admins
+  const targetNumbers = to
+    ? [to]
+    : (process.env.ADMIN_NUMBER || '923299931199').split(',').map(n => n.trim()).filter(Boolean);
 
   try {
-    const targetUrl = serviceUrl.replace(/\/$/, '') + '/send';
-    console.log('[WA-PROXY] Sending to +' + targetNumber + ' via ' + targetUrl);
+    const results = [];
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+    // Send to all admin numbers in parallel
+    const sendPromises = targetNumbers.map(async (targetNumber) => {
+      try {
+        console.log('[WA-PROXY] Sending to +' + targetNumber + ' via ' + targetUrl);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        secret: apiSecret,
-        message: message,
-        to: targetNumber
-      }),
-      signal: controller.signal
+        const response = await fetch(targetUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            secret: apiSecret,
+            message: message,
+            to: targetNumber
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        const data = await response.json();
+        console.log('[WA-PROXY] +' + targetNumber + ': ' + (data.success ? 'queued' : data.error || 'failed'));
+        results.push({ number: targetNumber, ...data });
+      } catch (err) {
+        console.error('[WA-PROXY] +' + targetNumber + ' error: ' + err.message);
+        results.push({ number: targetNumber, success: false, error: err.message });
+      }
     });
-    clearTimeout(timeout);
 
-    const data = await response.json();
-    console.log('[WA-PROXY] Response: ' + (data.success ? 'queued' : data.error || 'failed'));
-    return res.status(response.ok ? 200 : response.status).json(data);
+    await Promise.all(sendPromises);
+
+    const allSuccess = results.every(r => r.success);
+    return res.status(200).json({
+      success: allSuccess,
+      results,
+      message: `Sent to ${results.filter(r => r.success).length}/${results.length} admins`
+    });
   } catch (err) {
     console.error('[WA-PROXY] Error: ' + err.message);
     return res.status(502).json({ success: false, error: 'WhatsApp service unreachable: ' + err.message });

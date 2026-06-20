@@ -358,7 +358,15 @@ function setupWaSendButton() {
 setupSearch();
 setupWaSendButton();
 initDownloadButtons();
-loadSection();
+
+// Load with progress
+const lp = window.__lp || function(){};
+lp(20, 'Loading ' + meta.title + '...');
+loadSection().then(() => {
+  lp(100, meta.title + ' ready!');
+}).catch(() => {
+  lp(100, 'Loaded with errors');
+});
 
 // Poll every 30 seconds
 setInterval(loadSection, 30000);
