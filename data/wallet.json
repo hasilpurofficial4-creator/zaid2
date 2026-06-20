@@ -187,5 +187,12 @@
     "personOrPurpose": "SWITCH",
     "amount": 160,
     "timestamp": "2026-06-20T20:43:19.515Z"
+  },
+  {
+    "id": "wlt_k7ksuy4ht2vln",
+    "type": "out",
+    "personOrPurpose": "TAPE",
+    "amount": 70,
+    "timestamp": "2026-06-20T20:43:31.019Z"
   }
 ]
