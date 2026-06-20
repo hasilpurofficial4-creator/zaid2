@@ -194,5 +194,12 @@
     "personOrPurpose": "TAPE",
     "amount": 70,
     "timestamp": "2026-06-20T20:43:31.019Z"
+  },
+  {
+    "id": "wlt_cev8opi2c9h7s",
+    "type": "out",
+    "personOrPurpose": "CLIPPER/AHMAD",
+    "amount": 800,
+    "timestamp": "2026-06-20T20:44:00.494Z"
   }
 ]
