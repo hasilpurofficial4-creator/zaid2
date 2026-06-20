@@ -118,7 +118,7 @@ export function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Send WhatsApp message via whatsapp-service (Vercel proxy → Render bot)
+// Send WhatsApp message via Railway whatsapp-service (Vercel proxy → Railway bot)
 export async function sendViaBot(message) {
   try {
     const res = await fetch('/api/whatsapp-send', {

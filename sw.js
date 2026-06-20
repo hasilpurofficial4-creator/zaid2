@@ -1,4 +1,4 @@
-// Service Worker for ZAID BWP STOCK MANAGER
+// Service Worker for UNIT STOCK MANAGEMENT
 const CACHE_NAME = 'zaid-bwp-stock-v1';
 const APP_SHELL = [
   '/',
@@ -78,7 +78,7 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification handler
 self.addEventListener('push', (event) => {
-  let data = { title: 'ZAID BWP STOCK MANAGER', body: 'New update available' };
+  let data = { title: 'UNIT STOCK MANAGEMENT', body: 'New update available' };
 
   if (event.data) {
     try {

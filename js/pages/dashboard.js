@@ -97,7 +97,7 @@ function buildSectionSummary(section) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${line}\n${body}\n${line}\n🏢 *UNIT STOCK MANAGEMENT*\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 *View Details:*\n${pageUrl}`;
 }
 
 // Send section summary via WhatsApp

@@ -11,19 +11,22 @@ import { renderClipping } from '../sections/clipping.js';
 import { initTheme } from '../shared/theme.js';
 import { sendViaBot } from '../shared/utils.js';
 
+const BOT_NAME = 'UNIT STOCK MANAGEMENT';
+
 // Initialize theme toggle
 initTheme();
 
 const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
 
 // ==================== WhatsApp Direct Notify ====================
-const WA_TARGET = '923244643714';
+const LINE = '╔══════════════════════════════╗';
+const DIV  = '╠══════════════════════════════╣';
+const END  = '╚══════════════════════════════╝';
 
 function buildWhatsAppMessage(section, entry) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', hour12:true });
-  const line = '══════════════════════════════';
 
   let title = '', body = '';
 
@@ -37,11 +40,6 @@ function buildWhatsAppMessage(section, entry) {
         ? '💰 ✦ *MONEY RECEIVED* ✦ 💰'
         : '💸 ✦ *MONEY SPENT* ✦ 💸';
       body = `${entry.type === 'in' ? '📥 *From:*' : '📤 *For:*'} ${entry.personOrPurpose}\n💵 *Amount:* Rs. ${Number(entry.amount).toLocaleString()}`;
-      if (entry.balance !== undefined) {
-        const balSign = entry.balance >= 0 ? '+' : '-';
-        const balLabel = entry.balance >= 0 ? '✅ POSITIVE' : '⚠️ NEGATIVE';
-        body += `\n🏦 *Balance:* ${balSign}Rs. ${Math.abs(entry.balance).toLocaleString()} (${balLabel})`;
-      }
       break;
     case 'person':
       title = '👷 ✦ *WORKER ADDED* ✦ 👷';
@@ -49,8 +47,8 @@ function buildWhatsAppMessage(section, entry) {
       break;
     case 'maintenance':
       if (entry.status === 'solved') {
-        title = '✅ ✦ *ISSUE SOLVED* ✦ ✅';
-        body = `🔧 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n📄 *Desc:* ${entry.description || 'N/A'}\n✅ *Status:* Resolved`;
+        title = '✅ ✦ *ISSUE RESOLVED* ✦ ✅';
+        body = `🔧 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n✅ *Status:* Resolved`;
       } else {
         title = '🔧 ✦ *MAINTENANCE ENTRY* ✦ 🔧';
         body = `🔧 *Type:* ${entry.category}\n📝 *Subject:* ${entry.subject}\n📄 *Desc:* ${entry.description || 'N/A'}`;
@@ -63,7 +61,7 @@ function buildWhatsAppMessage(section, entry) {
       body = `👤 *Person:* ${entry.personName}\n📋 *Program:* ${entry.program || 'N/A'}\n🔢 *Pieces:* ${entry.pieces || 'N/A'}`;
       break;
     case 'clipping':
-      title = '✂️ ✦ *CLIPPING ENTRY* ✦ ✂️';
+      title = '✂️ ✦ *CLIPPING ENTRY* ✂️';
       body = `✂️ *Clipper:* ${entry.clipperName}\n📏 *Size:* ${entry.size}\n📥 *Type:* ${entry.type === 'in' ? '✅ Clipped In' : '📤 Out for Clipping'}`;
       break;
     default:
@@ -72,8 +70,7 @@ function buildWhatsAppMessage(section, entry) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-
-  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${LINE}\n${body}\n${DIV}\n🏢 *${BOT_NAME}*\n📅 ${dateStr}  ⏰ ${timeStr}\n${DIV}\n🌐 *View Details:*\n${pageUrl}\n${END}`;
 }
 
 function sendWhatsAppNotify(section, entry) {
@@ -379,7 +376,7 @@ window.testWaSend = async function() {
   if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
 
   try {
-    const testMsg = '🧪 *TEST MESSAGE*\n══════════════════════════════\n✅ WhatsApp bot is working!\n📅 ' + new Date().toLocaleString() + '\n══════════════════════════════\n👨‍💻 *ZAID BWP DEVELOPER*';
+    const testMsg = `🧪 *TEST MESSAGE*\n${LINE}\n✅ WhatsApp bot is working!\n🏢 *${BOT_NAME}*\n📅 ${new Date().toLocaleString()}\n${END}`;
     const res = await fetch('/api/whatsapp-send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

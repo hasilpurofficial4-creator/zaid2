@@ -2,55 +2,104 @@
 const webpush = require('web-push');
 const { readFile, writeFile } = require('./_github');
 
+const BOT_NAME = 'UNIT STOCK MANAGEMENT';
+const SITE_URL = 'https://zaidbwp.vercel.app';
+const LINE = '╔══════════════════════════════╗';
+const DIV  = '╠══════════════════════════════╣';
+const END  = '╚══════════════════════════════╝';
+
 function buildWhatsAppMessage(sectionName, entrySummary, entryData) {
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-  const line = '══════════════════════════════';
   const section = (sectionName || '').toLowerCase();
+  const e = entryData || {};
 
   let title = '', body = '';
-  const e = entryData || {};
 
   switch (section) {
     case 'items':
       title = '📦 ✦ *NEW ITEM ADDED* ✦ 📦';
-      body = `📋 *Name:* ${e.name || 'N/A'}\n🔢 *Serial:* ${e.number || 'N/A'}\n👤 *Person:* ${e.person || 'N/A'}\n📐 *Model:* ${e.model || 'N/A'}\n📊 *Status:* ${e.status || 'available'}`;
+      body = [
+        `📋 *Name:* ${e.name || 'N/A'}`,
+        `🔢 *Serial:* ${e.number || 'N/A'}`,
+        `👤 *Person:* ${e.person || 'N/A'}`,
+        `📐 *Model:* ${e.model || 'N/A'}`,
+        `📦 *Qty:* ${e.quantity || 1}`,
+        `🏷️ *Status:* ${e.status === 'available' ? '🟢' : e.status === 'in-use' ? '🔵' : '🔴'} ${e.status || 'available'}`
+      ].join('\n');
       break;
+
     case 'wallet': {
       const isIn = e.type === 'in';
       title = isIn ? '💰 ✦ *MONEY RECEIVED* ✦ 💰' : '💸 ✦ *MONEY SPENT* ✦ 💸';
-      body = `${isIn ? '📥 *From:*' : '📤 *For:*'} ${e.personOrPurpose || 'N/A'}\n💵 *Amount:* Rs. ${Number(e.amount || 0).toLocaleString()}`;
+      body = [
+        `${isIn ? '📥 *From:*' : '📤 *For:*'} ${e.personOrPurpose || 'N/A'}`,
+        `💵 *Amount:* Rs. ${Number(e.amount || 0).toLocaleString()}`,
+        `🏷️ *Type:* ${isIn ? '📥 Income' : '📤 Expense'}`
+      ].join('\n');
       break;
     }
+
     case 'person':
     case 'attendance':
       title = '👷 ✦ *WORKER ' + (e.action === 'exit' ? 'CHECKED OUT' : 'CHECKED IN') + '* ✦ 👷';
-      body = `👤 *Name:* ${e.personName || 'N/A'}\n✅ *Action:* ${e.action === 'exit' ? 'Exit Logged' : 'Entry Logged'}`;
+      body = [
+        `👤 *Name:* ${e.personName || 'N/A'}`,
+        `🏷️ *Action:* ${e.action === 'exit' ? '🔴 Exit Logged' : '🟢 Entry Logged'}`,
+        `📅 *Time:* ${timeStr}`
+      ].join('\n');
       break;
+
     case 'maintenance':
       if (e.status === 'solved') {
-        title = '✅ ✦ *ISSUE SOLVED* ✦ ✅';
+        title = '✅ ✦ *ISSUE RESOLVED* ✦ ✅';
       } else {
-        title = '🔧 ✦ *MAINTENANCE ENTRY* ✦ 🔧';
+        title = '🔧 ✦ *NEW MAINTENANCE* ✦ 🔧';
       }
-      body = `🔧 *Type:* ${e.category || 'N/A'}\n📝 *Subject:* ${e.subject || 'N/A'}\n📄 *Desc:* ${e.description || 'N/A'}\n📊 *Status:* ${e.status || 'open'}`;
+      body = [
+        `🏷️ *Type:* ${e.category || 'N/A'}`,
+        `📝 *Subject:* ${e.subject || 'N/A'}`,
+        `📄 *Desc:* ${e.description || 'N/A'}`,
+        `📊 *Status:* ${e.status === 'solved' ? '✅ Resolved' : '🔴 Open'}`
+      ].join('\n');
       break;
+
     case 'samples':
-      title = e.type === 'in' ? '🧪 ✦ *SAMPLE RECEIVED* ✦ 🧪' : '📤 ✦ *SAMPLE SENT* ✦ 📤';
-      body = `👤 *Person:* ${e.personName || 'N/A'}\n📋 *Program:* ${e.program || 'N/A'}\n🔢 *Pieces:* ${e.pieces || 'N/A'}`;
+      title = e.type === 'in' ? '🧪 ✦ *SAMPLE RECEIVED* ✦ 🧪' : '📤 ✦ *SAMPLE SENT OUT* ✦ 📤';
+      body = [
+        `👤 *Person:* ${e.personName || 'N/A'}`,
+        `📋 *Program:* ${e.program || 'N/A'}`,
+        `🔢 *Pieces:* ${e.pieces || 'N/A'}`,
+        `🏷️ *Type:* ${e.type === 'in' ? '📥 Sample In' : '📤 Sample Out'}`
+      ].join('\n');
       break;
+
     case 'clipping':
-      title = '✂️ ✦ *CLIPPING ENTRY* ✦ ✂️';
-      body = `✂️ *Clipper:* ${e.clipperName || 'N/A'}\n📏 *Size:* ${e.size || 'N/A'}\n📥 *Type:* ${e.type === 'in' ? 'Clipped In' : e.type === 'transfer' ? 'Transfer' : 'Out for Clipping'}`;
+      title = '✂️ ✦ *CLIPPING ENTRY* ✂️';
+      body = [
+        `✂️ *Clipper:* ${e.clipperName || 'N/A'}`,
+        `📏 *Size:* ${e.size || 'N/A'} yards`,
+        `🏷️ *Type:* ${e.type === 'in' ? '📥 Clipped In' : e.type === 'transfer' ? '💸 Transfer' : '📤 Out for Clipping'}`
+      ].join('\n');
       break;
+
     default:
-      title = `🔔 ✦ *NEW: ${section.toUpperCase()}* ✦ 🔔`;
+      title = `🔔 ✦ *NEW: ${(sectionName || 'ENTRY').toUpperCase()}* ✦ 🔔`;
       body = `➤ ${entrySummary || JSON.stringify(e)}`;
   }
 
-  const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${line}\n${body}\n${line}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${line}\n🌐 SEE MORE INFO.\n${pageUrl}`;
+  const pageUrl = `${SITE_URL}/section.html?page=${section}`;
+
+  return [
+    title, LINE, body, DIV,
+    `🏢 *${BOT_NAME}*`,
+    `📅 ${dateStr}  ⏰ ${timeStr}`,
+    DIV,
+    `🌐 *View Details:*`,
+    pageUrl,
+    END
+  ].join('\n');
 }
 
 async function sendNotifications(sectionName, entrySummary, entryData) {
@@ -60,7 +109,7 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
       console.log('VAPID keys not configured, skipping push notifications');
     } else {
       webpush.setVapidDetails(
-        process.env.VAPID_EMAIL || 'mailto:zaid@example.com',
+        process.env.VAPID_EMAIL || 'mailto:admin@zaidbwp.vercel.app',
         process.env.VAPID_PUBLIC_KEY,
         process.env.VAPID_PRIVATE_KEY
       );
@@ -68,7 +117,7 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
       const { data: subscriptions, sha } = await readFile('subscriptions');
       if (subscriptions && subscriptions.length > 0) {
         const payload = JSON.stringify({
-          title: 'ZAID BWP STOCK MANAGER',
+          title: BOT_NAME,
           body: `New entry in ${sectionName}: ${entrySummary}`,
           icon: '/icons/icon-192.svg',
           badge: '/icons/icon-192.svg',
@@ -102,19 +151,17 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
     console.error('Push notification error:', err.message);
   }
 
-  // Send WhatsApp notification via whatsapp-service (ALWAYS, not just when entryData exists)
+  // Send WhatsApp notification via Railway whatsapp-service
   try {
     const botUrl = process.env.WA_SERVICE_URL;
     if (!botUrl) {
       console.log('[WA] WA_SERVICE_URL not set — skipping WhatsApp notification');
-      console.log('[WA] Set WA_SERVICE_URL env var on Vercel to enable auto-send');
       return;
     }
     const targetUrl = botUrl.replace(/\/$/, '');
     const apiSecret = process.env.WA_API_SECRET || 'banu-saeed-secret-2024';
-    const adminNumber = process.env.ADMIN_NUMBER || '923244643714';
+    const adminNumber = process.env.ADMIN_NUMBER || '923291001302';
 
-    // Build rich WhatsApp message
     const msg = buildWhatsAppMessage(sectionName, entrySummary, entryData);
 
     console.log('[WA] Sending to +' + adminNumber + ' via ' + targetUrl);

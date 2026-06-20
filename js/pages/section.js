@@ -71,7 +71,7 @@ if (!meta) {
 }
 
 // Update page metadata
-document.title = `${meta.title} - ZAID BWP STOCK MANAGER`;
+document.title = `${meta.title} - UNIT STOCK MANAGEMENT`;
 document.getElementById('section-title').textContent = meta.title;
 document.getElementById('section-subtitle').textContent = meta.subtitle;
 document.getElementById('section-icon').innerHTML = meta.icon;
@@ -340,7 +340,7 @@ function buildAllEntries(section, data) {
   }
 
   const pageUrl = `https://zaidbwp.vercel.app/section.html?page=${section}`;
-  return `${title}\n${sep}\n${summary}\n${sep}\n${entries}\n${sep}\n👨‍💻 *ZAID BWP DEVELOPER* 👨‍💻\n📅 ${dateStr}  ⏰ ${timeStr}\n${sep}\n🌐 SEE MORE INFO.\n${pageUrl}`;
+  return `${title}\n${sep}\n${summary}\n${sep}\n${entries}\n${sep}\n🏢 *UNIT STOCK MANAGEMENT*\n📅 ${dateStr}  ⏰ ${timeStr}\n${sep}\n🌐 *View Details:*\n${pageUrl}`;
 }
 
 // Setup WhatsApp send button

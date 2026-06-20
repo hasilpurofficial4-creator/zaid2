@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     return res.status(400).json({ error: 'message required', success: false });
   }
 
-  const targetNumber = to || process.env.ADMIN_NUMBER || '923244643714';
+  const targetNumber = to || process.env.ADMIN_NUMBER || '923291001302';
 
   try {
     const targetUrl = serviceUrl.replace(/\/$/, '') + '/send';
