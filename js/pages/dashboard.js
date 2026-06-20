@@ -191,6 +191,8 @@ async function loadHubStats() {
 }
 
 // ==================== Salary Calculator ====================
+const ZAID_SALARY = 42000;
+
 function buildSalaryCalculator(personData) {
   const hubGrid = document.querySelector('.hub-grid');
   if (!hubGrid) return;
@@ -200,6 +202,8 @@ function buildSalaryCalculator(personData) {
   if (existing) existing.remove();
 
   const workers = [...new Set(personData.map(e => e.personName).filter(Boolean))].sort();
+  // Add ZAID if not already present
+  if (!workers.includes('ZAID')) workers.unshift('ZAID');
   if (!workers.length) return;
 
   const card = document.createElement('div');
@@ -211,7 +215,7 @@ function buildSalaryCalculator(personData) {
       <div style="width:36px;height:36px;border-radius:var(--radius-sm);background:rgba(245,158,11,0.1);display:flex;align-items:center;justify-content:center;font-size:18px;">💰</div>
       <div>
         <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);">Salary Calculator</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);">Calculate salary based on days worked</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);">Calculate salary for previous full month</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;">
@@ -221,7 +225,7 @@ function buildSalaryCalculator(personData) {
           ${workers.map(w => `<option value="${w}">${w}</option>`).join('')}
         </select>
       </div>
-      <div style="flex:1;min-width:120px;">
+      <div style="flex:1;min-width:120px;" id="salary-amount-wrap">
         <label style="font-size:0.7rem;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;">Monthly Salary (Rs.)</label>
         <input type="number" id="salary-amount" placeholder="25000" style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:0.85rem;background:var(--bg-card);color:var(--text-primary);">
       </div>
@@ -231,6 +235,24 @@ function buildSalaryCalculator(personData) {
   `;
 
   hubGrid.parentNode.insertBefore(card, hubGrid.nextSibling);
+
+  // ZAID auto-fill: hide salary input when ZAID selected
+  const workerSelect = document.getElementById('salary-worker');
+  const amountWrap = document.getElementById('salary-amount-wrap');
+  const amountInput = document.getElementById('salary-amount');
+  function onWorkerChange() {
+    if (workerSelect.value === 'ZAID') {
+      amountInput.value = ZAID_SALARY;
+      amountInput.disabled = true;
+      amountInput.title = 'ZAID fixed salary: Rs. ' + ZAID_SALARY.toLocaleString();
+    } else {
+      amountInput.value = '';
+      amountInput.disabled = false;
+      amountInput.title = '';
+    }
+  }
+  workerSelect.addEventListener('change', onWorkerChange);
+  onWorkerChange(); // trigger on load
 
   document.getElementById('salary-calc-btn').addEventListener('click', () => {
     const workerName = document.getElementById('salary-worker').value;
@@ -244,32 +266,30 @@ function calculateWorkerSalary(workerName, monthlySalary, personData) {
   const result = document.getElementById('salary-result');
   if (!result) return;
 
+  const isZaid = workerName === 'ZAID';
   const today = new Date();
-  const currentDay = today.getDate();
-  let periodStart, periodEnd, dividerMonth;
+  // Always use previous full month (1st to last day)
+  const periodStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const periodEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+  const monthName = periodStart.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-  if (currentDay <= 5) {
-    periodStart = new Date(today.getFullYear(), today.getMonth() - 1, 6);
-    periodEnd = new Date(today.getFullYear(), today.getMonth(), 5, 23, 59, 59, 999);
-    dividerMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  // Count days worked (only from attendance data for workers other than ZAID)
+  let daysWorked = 0;
+  let absents = 0;
+  if (!isZaid) {
+    const enterEntries = personData
+      .filter(e => e.personName === workerName && e.action === 'enter')
+      .map(e => ({ ...e, _date: new Date(e.timestamp) }))
+      .filter(e => e._date >= periodStart && e._date <= periodEnd);
+    const workDates = new Set();
+    enterEntries.forEach(e => workDates.add(e._date.toDateString()));
+    daysWorked = workDates.size;
+    absents = daysInMonth - daysWorked;
   } else {
-    periodStart = new Date(today.getFullYear(), today.getMonth(), 6);
-    periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 5, 23, 59, 59, 999);
-    dividerMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    daysWorked = daysInMonth; // ZAID: 0 absents, full month
+    absents = 0;
   }
-
-  const daysInMonth = new Date(dividerMonth.getFullYear(), dividerMonth.getMonth() + 1, 0).getDate();
-  const monthName = dividerMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-  // Count days worked
-  const enterEntries = personData
-    .filter(e => e.personName === workerName && e.action === 'enter')
-    .map(e => ({ ...e, _date: new Date(e.timestamp) }))
-    .filter(e => e._date >= periodStart && e._date <= periodEnd);
-
-  const workDates = new Set();
-  enterEntries.forEach(e => workDates.add(e._date.toDateString()));
-  const daysWorked = workDates.size;
 
   const dailyRate = monthlySalary / daysInMonth;
   const earnedSalary = Math.round(dailyRate * daysWorked);
@@ -279,10 +299,14 @@ function calculateWorkerSalary(workerName, monthlySalary, personData) {
   result.style.display = 'block';
   result.innerHTML = `
     <div style="background:var(--bg-secondary);border-radius:var(--radius);padding:14px;border:1px solid var(--border);">
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;margin-bottom:12px;">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;text-align:center;margin-bottom:12px;">
         <div>
           <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Days Worked</div>
           <div style="font-size:1.3rem;font-weight:800;color:var(--accent);font-family:var(--font-mono);">${daysWorked}</div>
+        </div>
+        <div>
+          <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Absents</div>
+          <div style="font-size:1.3rem;font-weight:800;color:var(--danger);font-family:var(--font-mono);">${absents}</div>
         </div>
         <div>
           <div style="font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;">Daily Rate</div>
@@ -294,10 +318,10 @@ function calculateWorkerSalary(workerName, monthlySalary, personData) {
         </div>
       </div>
       <div style="font-size:0.7rem;color:var(--text-secondary);text-align:center;">
-        👤 <strong>${workerName}</strong> • 💰 Rs. ${monthlySalary.toLocaleString()}/month • 📅 ${periodStartStr} — ${periodEndStr} • 📆 ${monthName} (${daysInMonth} days)
+        👤 <strong>${workerName}</strong>${isZaid ? ' ⭐' : ''} • 💰 Rs. ${monthlySalary.toLocaleString()}/month • 📅 ${periodStartStr} — ${periodEndStr} • 📆 ${monthName} (${daysInMonth} days)
       </div>
       <div style="font-size:0.65rem;color:var(--text-muted);text-align:center;margin-top:6px;">
-        Formula: ${daysWorked} days × Rs. ${Math.round(dailyRate).toLocaleString()} = <strong style="color:var(--success);">Rs. ${earnedSalary.toLocaleString()}</strong>
+        Formula: ${daysWorked} days × Rs. ${Math.round(dailyRate).toLocaleString()} = <strong style="color:var(--success);">Rs. ${earnedSalary.toLocaleString()}</strong>${isZaid ? ' (0 absents)' : ''}
       </div>
     </div>
   `;
