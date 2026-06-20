@@ -228,5 +228,40 @@
     "date": "2026-06-10",
     "time": "22:00",
     "timestamp": "2026-06-10T22:00:00.000Z"
+  },
+  {
+    "id": "bill_9qh0xnsqv0uu2",
+    "personName": "ZAID",
+    "billPurpose": "COMPUTER",
+    "items": [
+      {
+        "name": "VGA CABLE",
+        "quantity": 1,
+        "model": "",
+        "price": 450
+      },
+      {
+        "name": "POWER CABLE",
+        "quantity": 2,
+        "model": "",
+        "price": 800
+      },
+      {
+        "name": "CONNECTOR",
+        "quantity": 1,
+        "model": "",
+        "price": 550
+      },
+      {
+        "name": "INSTALLATION",
+        "quantity": 1,
+        "model": "",
+        "price": 400
+      }
+    ],
+    "totalAmount": 2200,
+    "date": "2026-05-25",
+    "time": "17:00",
+    "timestamp": "2026-05-25T17:00:00.000Z"
   }
 ]
