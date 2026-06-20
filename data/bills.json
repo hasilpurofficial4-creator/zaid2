@@ -47,7 +47,7 @@
   },
   {
     "id": "bill_mkowfedy64z0a",
-    "personName": "NAJAF BHAI",
+    "personName": "ADNAN OPERATOR",
     "billPurpose": "EMB. ITEMS",
     "items": [
       {
@@ -81,7 +81,7 @@
         "price": 1260
       }
     ],
-    "totalAmount": 7040,
+    "totalAmount": "7040",
     "date": "2026-06-18",
     "time": "21:00",
     "timestamp": "2026-06-18T21:00:00.000Z"
