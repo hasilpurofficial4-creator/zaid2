@@ -8,6 +8,7 @@ import { renderPerson } from '../sections/person.js';
 import { renderMaintenance } from '../sections/maintenance.js';
 import { renderSamples } from '../sections/samples.js';
 import { renderClipping } from '../sections/clipping.js';
+import { renderBills } from '../sections/bills.js';
 import { initDownloadButtons } from '../shared/download.js';
 import { initTheme } from '../shared/theme.js';
 
@@ -57,6 +58,13 @@ const SECTION_META = {
     icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>',
     badgeClass: 'badge-primary',
     color: 'var(--accent)'
+  },
+  bills: {
+    title: 'Bills Management',
+    subtitle: 'Bills & receipts tracking',
+    icon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+    badgeClass: 'badge-success',
+    color: '#10b981'
   }
 };
 
@@ -126,6 +134,11 @@ async function loadSection() {
         renderClipping(container, data, opts);
         updateBadge(`${data.length} entries`);
         break;
+      case 'bills':
+        renderBills(container, data, opts);
+        const billTotal = data.reduce((a, e) => a + (Number(e.totalAmount) || 0), 0);
+        updateBadge(`${data.length} bills | Rs. ${billTotal.toLocaleString()}`);
+        break;
     }
   } catch (err) {
     console.error(`Error loading ${page}:`, err);
@@ -167,6 +180,7 @@ function setupSearch() {
         case 'maintenance': fields.push(entry.subject, entry.description, entry.category, entry.status); break;
         case 'samples': fields.push(entry.personName, entry.program, entry.pieces, entry.type); break;
         case 'clipping': fields.push(entry.clipperName, entry.size, entry.type); break;
+        case 'bills': fields.push(entry.personName, entry.billPurpose, String(entry.totalAmount), entry.date); break;
       }
       return fields.some(f => f && String(f).toLowerCase().includes(query));
     });
@@ -186,6 +200,7 @@ function renderFiltered(data) {
     case 'maintenance': renderMaintenance(container, data, opts); break;
     case 'samples': renderSamples(container, data, opts); break;
     case 'clipping': renderClipping(container, data, opts); break;
+    case 'bills': renderBills(container, data, opts); break;
   }
 }
 
@@ -331,6 +346,23 @@ function buildAllEntries(section, data) {
           `  ✂️ ${e.type === 'transfer' ? 'Recipient' : 'Clipper'}: ${e.clipperName || 'N/A'}`,
           `  ${e.type === 'transfer' ? '💵' : '📏'} ${e.type === 'transfer' ? 'Amount' : 'Size'}: ${e.size || 'N/A'}`,
           `  🕐 ${fmtTs(e.timestamp)}`
+        ].join('\n');
+      }).join(`\n${div}\n`);
+      break;
+    }
+    case 'bills': {
+      const totalAmt = data.reduce((a, e) => a + (Number(e.totalAmount) || 0), 0);
+      const totalItems = data.reduce((a, e) => a + (Array.isArray(e.items) ? e.items.length : 0), 0);
+      title = `🧾 ✦ *ALL BILLS (${data.length})* ✦ 🧾`;
+      summary = `📦 *Bills:* ${data.length} | 📋 *Items:* ${totalItems} | 💰 *Total:* Rs. ${totalAmt.toLocaleString()}`;
+      entries = data.map((e, i) => {
+        const items = Array.isArray(e.items) ? e.items : [];
+        const itemLines = items.map((it, j) => `  ${j+1}. ${it.name} × ${it.quantity || 1} — Rs. ${Number(it.price || 0).toLocaleString()}`).join('\n');
+        return [
+          `${i+1}. 🧾 *${e.personName || 'N/A'}* — ${e.billPurpose || 'N/A'}`,
+          `  📅 ${e.date || 'N/A'} ${e.time || ''}`,
+          `  💰 Total: Rs. ${Number(e.totalAmount || 0).toLocaleString()}`,
+          itemLines || '  (no items)'
         ].join('\n');
       }).join(`\n${div}\n`);
       break;

@@ -8,6 +8,7 @@ import { renderPerson } from '../sections/person.js';
 import { renderMaintenance } from '../sections/maintenance.js';
 import { renderSamples } from '../sections/samples.js';
 import { renderClipping } from '../sections/clipping.js';
+import { renderBills } from '../sections/bills.js';
 import { initTheme } from '../shared/theme.js';
 import { sendViaBot } from '../shared/utils.js';
 
@@ -16,7 +17,7 @@ const BOT_NAME = 'UNIT STOCK MANAGEMENT';
 // Initialize theme toggle
 initTheme();
 
-const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping'];
+const SECTIONS = ['items', 'wallet', 'person', 'maintenance', 'samples', 'clipping', 'bills'];
 
 // ==================== WhatsApp Direct Notify ====================
 const LINE = '╔══════════════════════════════╗';
@@ -64,6 +65,12 @@ function buildWhatsAppMessage(section, entry) {
       title = '✂️ ✦ *CLIPPING ENTRY* ✂️';
       body = `✂️ *Clipper:* ${entry.clipperName}\n📏 *Size:* ${entry.size}\n📥 *Type:* ${entry.type === 'in' ? '✅ Clipped In' : '📤 Out for Clipping'}`;
       break;
+    case 'bills': {
+      title = '🧾 ✦ *NEW BILL* ✦ 🧾';
+      const itemCount = Array.isArray(entry.items) ? entry.items.length : 0;
+      body = `👤 *Person:* ${entry.personName}\n📋 *Purpose:* ${entry.billPurpose}\n📦 *Items:* ${itemCount}\n💰 *Total:* Rs. ${Number(entry.totalAmount || 0).toLocaleString()}\n📅 *Date:* ${entry.date} ${entry.time}`;
+      break;
+    }
     default:
       title = `🔔 ✦ *NEW: ${section.toUpperCase()}* ✦ 🔔`;
       body = `➤ ${JSON.stringify(entry)}`;
@@ -100,6 +107,7 @@ async function loadSection(section) {
       case 'maintenance': renderMaintenance(container, data, opts); break;
       case 'samples': renderSamples(container, data, opts); break;
       case 'clipping': renderClipping(container, data, opts); break;
+      case 'bills': renderBills(container, data, opts); break;
     }
   } catch (err) {
     console.error(`Error loading ${section}:`, err);
@@ -242,6 +250,40 @@ function setupForms() {
       document.getElementById('clipping-size').value = '';
       document.getElementById('clipping-form-panel').classList.remove('active');
       showToast('Success', 'Clipping entry added', 'success');
+      loadAllSections();
+    } catch (err) {
+      showToast('Error', err.message, 'error');
+    }
+  });
+
+  // Bills submit
+  document.getElementById('bills-submit')?.addEventListener('click', async () => {
+    const personName = document.getElementById('bills-person').value.trim();
+    const billPurpose = document.getElementById('bills-purpose').value.trim();
+    if (!personName || !billPurpose) { showToast('Error', 'Person name and bill purpose are required', 'error'); return; }
+    // Gather item rows
+    const rows = document.querySelectorAll('#bills-items-container .bill-item-row');
+    if (!rows.length) { showToast('Error', 'Add at least one item', 'error'); return; }
+    const items = [];
+    rows.forEach(row => {
+      const name = row.querySelector('.bill-item-name')?.value.trim() || '';
+      const quantity = Number(row.querySelector('.bill-item-qty')?.value) || 1;
+      const model = row.querySelector('.bill-item-model')?.value.trim() || '';
+      const price = Number(row.querySelector('.bill-item-price')?.value) || 0;
+      if (name) items.push({ name, quantity, model, price });
+    });
+    if (!items.length) { showToast('Error', 'Add at least one item with a name', 'error'); return; }
+    const date = document.getElementById('bills-date').value || new Date().toISOString().slice(0, 10);
+    const time = document.getElementById('bills-time').value || new Date().toTimeString().slice(0, 5);
+    const entryData = { personName, billPurpose, items, date, time };
+    try {
+      await createEntry('bills', entryData);
+      document.getElementById('bills-person').value = '';
+      document.getElementById('bills-purpose').value = '';
+      document.getElementById('bills-items-container').innerHTML = '';
+      document.getElementById('bills-total-display').textContent = 'Rs. 0';
+      document.getElementById('bills-form-panel').classList.remove('active');
+      showToast('Success', 'Bill submitted successfully', 'success');
       loadAllSections();
     } catch (err) {
       showToast('Error', err.message, 'error');

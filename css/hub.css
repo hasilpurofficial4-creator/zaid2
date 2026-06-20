@@ -197,6 +197,7 @@
 .hub-card-maintenance .hub-card-glow { background: radial-gradient(circle at 20% 50%, rgba(245,158,11,0.06) 0%, transparent 70%); }
 .hub-card-samples .hub-card-glow { background: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.06) 0%, transparent 70%); }
 .hub-card-clipping .hub-card-glow { background: radial-gradient(circle at 20% 50%, rgba(236,72,153,0.06) 0%, transparent 70%); }
+.hub-card-bills .hub-card-glow { background: radial-gradient(circle at 20% 50%, rgba(16,185,129,0.06) 0%, transparent 70%); }
 .hub-card-admin .hub-card-glow { background: radial-gradient(circle at 20% 50%, rgba(239,68,68,0.06) 0%, transparent 70%); }
 
 /* Card Icon */
@@ -226,6 +227,7 @@
 .hub-card-maintenance .hub-card-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
 .hub-card-samples .hub-card-icon { background: rgba(139,92,246,0.1); color: #8b5cf6; }
 .hub-card-clipping .hub-card-icon { background: rgba(236,72,153,0.1); color: #ec4899; }
+.hub-card-bills .hub-card-icon { background: rgba(16,185,129,0.1); color: #10b981; }
 .hub-card-admin .hub-card-icon { background: rgba(239,68,68,0.1); color: #ef4444; }
 
 /* Dark mode icon backgrounds */
@@ -235,6 +237,7 @@
 [data-theme="dark"] .hub-card-maintenance .hub-card-icon { background: rgba(245,158,11,0.15); color: #fbbf24; }
 [data-theme="dark"] .hub-card-samples .hub-card-icon { background: rgba(139,92,246,0.15); color: #a78bfa; }
 [data-theme="dark"] .hub-card-clipping .hub-card-icon { background: rgba(236,72,153,0.15); color: #f472b6; }
+[data-theme="dark"] .hub-card-bills .hub-card-icon { background: rgba(16,185,129,0.15); color: #34d399; }
 [data-theme="dark"] .hub-card-admin .hub-card-icon { background: rgba(239,68,68,0.15); color: #f87171; }
 
 /* Card Content */
@@ -327,6 +330,7 @@
 .hub-card-maintenance:hover { border-color: #f59e0b; }
 .hub-card-samples:hover { border-color: #8b5cf6; }
 .hub-card-clipping:hover { border-color: #ec4899; }
+.hub-card-bills:hover { border-color: #10b981; }
 .hub-card-admin:hover { border-color: #ef4444; }
 
 /* Admin card - full width */

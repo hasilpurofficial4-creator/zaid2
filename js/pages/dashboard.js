@@ -95,6 +95,13 @@ function buildSectionSummary(section) {
       body = `✂️ *Total Clippings:* ${inEntries.length + outEntries.length}\n📥 *Clipped In:* ${inEntries.length} (${totalSize} yards)\n📤 *Out for Clipping:* ${outEntries.length}\n💰 *Total Payment:* Rs. ${totalRupees.toLocaleString()} (${totalSize} × 12)\n💸 *Paid/Transferred:* Rs. ${totalTransferred.toLocaleString()} (${transferEntries.length} transfers)\n🏦 *Remaining:* Rs. ${remaining.toLocaleString()}`;
       break;
     }
+    case 'bills': {
+      const totalAmt = data.reduce((a, e) => a + (Number(e.totalAmount) || 0), 0);
+      const totalItems = data.reduce((a, e) => a + (Array.isArray(e.items) ? e.items.length : 0), 0);
+      title = '🧾 ✦ *BILLS SUMMARY* ✦ 🧾';
+      body = `📦 *Total Bills:* ${data.length}\n📋 *Total Items:* ${totalItems}\n💰 *Total Amount:* Rs. ${totalAmt.toLocaleString()}`;
+      break;
+    }
     default:
       return null;
   }
@@ -162,20 +169,27 @@ async function loadHubStats() {
 
     lp(55, 'Loading samples & clipping...');
 
-    // Samples & clipping badges
-    const [samples, clipping] = await Promise.all([
+    // Samples & Clipping & Bills badges
+    const [samples, clipping, bills] = await Promise.all([
       fetchSection('samples'),
-      fetchSection('clipping')
+      fetchSection('clipping'),
+      fetchSection('bills')
     ]);
-
+    
     // Cache for summary builder
     sectionData.samples = samples;
     sectionData.clipping = clipping;
-
+    sectionData.bills = bills;
+    
     const badgeSamples = document.getElementById('badge-samples');
     if (badgeSamples) badgeSamples.textContent = samples.length;
     const badgeClipping = document.getElementById('badge-clipping');
     if (badgeClipping) badgeClipping.textContent = clipping.length;
+    const badgeBills = document.getElementById('badge-bills');
+    if (badgeBills) {
+      const billsTotal = bills.reduce((a, e) => a + (Number(e.totalAmount) || 0), 0);
+      badgeBills.textContent = 'Rs. ' + billsTotal.toLocaleString();
+    }
 
     lp(75, 'Building dashboard...');
 
@@ -358,12 +372,14 @@ setupInstallPrompt();
 // Poll stats every 30 seconds (skip loading screen on refresh)
 setInterval(async () => {
   try {
-    const [items, wallet, person, maintenance, samples, clipping] = await Promise.all([
+    const [items, wallet, person, maintenance, samples, clipping, bills] = await Promise.all([
       fetchSection('items'), fetchSection('wallet'), fetchSection('person'),
-      fetchSection('maintenance'), fetchSection('samples'), fetchSection('clipping')
+      fetchSection('maintenance'), fetchSection('samples'), fetchSection('clipping'),
+      fetchSection('bills')
     ]);
     sectionData.items = items; sectionData.wallet = wallet; sectionData.person = person;
     sectionData.maintenance = maintenance; sectionData.samples = samples; sectionData.clipping = clipping;
+    sectionData.bills = bills;
 
     const itemsEl = document.getElementById('stat-items');
     if (itemsEl) itemsEl.textContent = items.length;
@@ -393,6 +409,11 @@ setInterval(async () => {
     if (badgeSamples) badgeSamples.textContent = samples.length;
     const badgeClipping = document.getElementById('badge-clipping');
     if (badgeClipping) badgeClipping.textContent = clipping.length;
+    const badgeBillsPoll = document.getElementById('badge-bills');
+    if (badgeBillsPoll) {
+      const billsTotal = bills.reduce((a, e) => a + (Number(e.totalAmount) || 0), 0);
+      badgeBillsPoll.textContent = 'Rs. ' + billsTotal.toLocaleString();
+    }
   } catch {}
 }, 30000);
 

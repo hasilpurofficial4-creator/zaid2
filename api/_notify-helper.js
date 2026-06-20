@@ -84,6 +84,19 @@ function buildWhatsAppMessage(sectionName, entrySummary, entryData) {
       ].join('\n');
       break;
 
+    case 'bills': {
+      title = '🧾 ✦ *NEW BILL* ✦ 🧾';
+      const itemCount = Array.isArray(e.items) ? e.items.length : 0;
+      body = [
+        `👤 *Person:* ${e.personName || 'N/A'}`,
+        `📋 *Purpose:* ${e.billPurpose || 'N/A'}`,
+        `📦 *Items:* ${itemCount}`,
+        `💰 *Total:* Rs. ${Number(e.totalAmount || 0).toLocaleString()}`,
+        `📅 *Date:* ${e.date || 'N/A'} ${e.time || ''}`
+      ].join('\n');
+      break;
+    }
+
     default:
       title = `🔔 ✦ *NEW: ${(sectionName || 'ENTRY').toUpperCase()}* ✦ 🔔`;
       body = `➤ ${entrySummary || JSON.stringify(e)}`;

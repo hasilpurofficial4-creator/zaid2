@@ -718,3 +718,175 @@
     flex-direction: column;
   }
 }
+
+/* ==================== Bills Styles ==================== */
+
+/* Dynamic bill item row in admin form */
+.bill-item-row {
+  display: grid;
+  grid-template-columns: 2fr 0.8fr 1.2fr 1fr auto;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.bill-item-row .form-input {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+}
+
+.bill-item-remove {
+  color: var(--danger);
+}
+
+/* Bills date group */
+.bills-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.bills-date-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.bills-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.bills-date-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.bills-date-total {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* Receipt-style bill card */
+.bill-receipt-card {
+  background: var(--bg-card);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  position: relative;
+}
+
+.bill-receipt-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.bill-receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px dashed var(--border);
+}
+
+.bill-receipt-person {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.bill-receipt-purpose {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.bill-receipt-datetime {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Bill items table */
+.bill-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin: var(--space-sm) 0;
+}
+
+.bill-items-table th {
+  text-align: left;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.bill-items-table td {
+  padding: 4px 6px;
+  color: var(--text-secondary);
+  border-bottom: 1px dashed var(--border-light);
+}
+
+.bill-items-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.bill-no-items {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: var(--space-sm);
+}
+
+/* Bill total */
+.bill-receipt-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-sm);
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+/* Bill actions */
+.bill-receipt-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  opacity: 0.6;
+  transition: opacity var(--transition);
+}
+
+.bill-receipt-card:hover .bill-receipt-actions {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .bill-item-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bill-item-row .bill-item-name {
+    grid-column: 1 / -1;
+  }
+}

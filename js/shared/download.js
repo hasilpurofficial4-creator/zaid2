@@ -42,6 +42,15 @@ const SECTION_COLUMNS = {
     { header: 'Type', key: 'type', format: (v) => v === 'in' ? 'Clipped In' : v === 'transfer' ? 'Transfer' : 'Out for Clipping' },
     { header: 'Size / Amount', key: 'size' },
     { header: 'Timestamp', key: 'timestamp', format: formatTimestamp }
+  ],
+  bills: [
+    { header: 'Person Name', key: 'personName' },
+    { header: 'Bill Purpose', key: 'billPurpose' },
+    { header: 'Items Count', key: 'items', format: (v) => Array.isArray(v) ? v.length : 0 },
+    { header: 'Total Amount (Rs.)', key: 'totalAmount' },
+    { header: 'Date', key: 'date' },
+    { header: 'Time', key: 'time' },
+    { header: 'Timestamp', key: 'timestamp', format: formatTimestamp }
   ]
 };
 
@@ -51,7 +60,8 @@ const SECTION_TITLES = {
   person: 'Person Details',
   maintenance: 'Maintenance',
   samples: 'Sample Management',
-  clipping: 'Clipping Details'
+  clipping: 'Clipping Details',
+  bills: 'Bills Management'
 };
 
 /**
