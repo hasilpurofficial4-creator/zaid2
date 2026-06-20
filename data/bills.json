@@ -159,5 +159,28 @@
     "date": "2026-06-20",
     "time": "20:00",
     "timestamp": "2026-06-20T20:00:00.000Z"
+  },
+  {
+    "id": "bill_da1h2aps34ad0",
+    "personName": "MASTER TANVEER",
+    "billPurpose": "COMPRESSOR",
+    "items": [
+      {
+        "name": "CAPACITOR",
+        "quantity": 2,
+        "model": "",
+        "price": 1100
+      },
+      {
+        "name": "SWITCH",
+        "quantity": 1,
+        "model": "",
+        "price": 150
+      }
+    ],
+    "totalAmount": 1250,
+    "date": "2026-06-13",
+    "time": "10:00",
+    "timestamp": "2026-06-13T10:00:00.000Z"
   }
 ]
