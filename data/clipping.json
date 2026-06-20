@@ -371,6 +371,34 @@
     "timestamp": "2026-06-14T18:12:22.652Z"
   },
   {
+    "id": "clp_4wvcee3mfxpy7",
+    "type": "out",
+    "clipperName": "AHMAD",
+    "size": "26",
+    "timestamp": "2026-06-18T12:53:18.039Z"
+  },
+  {
+    "id": "clp_w8vamlwoeg4784",
+    "type": "in",
+    "clipperName": "AHMAD",
+    "size": "11",
+    "timestamp": "2026-06-19T09:53:29.835Z"
+  },
+  {
+    "id": "clp_488wnsx2548",
+    "type": "out",
+    "clipperName": "AHMAD",
+    "size": "18",
+    "timestamp": "2026-06-20T04:53:52.494Z"
+  },
+  {
+    "id": "clp_7z3cbdjl6o1548",
+    "type": "in",
+    "clipperName": "AHMAD",
+    "size": "19",
+    "timestamp": "2026-06-20T10:12:22.652Z"
+  },
+  {
     "id": "clp_9k458afeo7vqn",
     "type": "transfer",
     "clipperName": "AHMAD",
