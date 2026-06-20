@@ -182,5 +182,34 @@
     "date": "2026-06-13",
     "time": "10:00",
     "timestamp": "2026-06-13T10:00:00.000Z"
+  },
+  {
+    "id": "bill_10qoabjjs6o2t",
+    "personName": "ELECTRICIAN",
+    "billPurpose": "LIGHT TRIP",
+    "items": [
+      {
+        "name": "PETROL",
+        "quantity": 1,
+        "model": "",
+        "price": 400
+      },
+      {
+        "name": "COMPRESSOR WIRE",
+        "quantity": 7,
+        "model": "",
+        "price": 500
+      },
+      {
+        "name": "REPAIRING",
+        "quantity": 1,
+        "model": "",
+        "price": 500
+      }
+    ],
+    "totalAmount": 1400,
+    "date": "2026-06-12",
+    "time": "22:00",
+    "timestamp": "2026-06-12T22:00:00.000Z"
   }
 ]
