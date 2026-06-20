@@ -208,5 +208,12 @@
     "personOrPurpose": "DISH WASH KIT",
     "amount": 300,
     "timestamp": "2026-06-20T20:44:21.663Z"
+  },
+  {
+    "id": "wlt_3j9ta3hvwwo9k",
+    "type": "in",
+    "personOrPurpose": "SIR NAJAF",
+    "amount": 1500,
+    "timestamp": "2026-06-20T20:44:52.224Z"
   }
 ]
