@@ -44,5 +44,46 @@
     "date": "2026-06-19",
     "time": "21:00",
     "timestamp": "2026-06-19T21:00:00.000Z"
+  },
+  {
+    "id": "bill_mkowfedy64z0a",
+    "personName": "NAJAF BHAI",
+    "billPurpose": "EMB. ITEMS",
+    "items": [
+      {
+        "name": "THREAD",
+        "quantity": 14,
+        "model": "MULTI",
+        "price": 3220
+      },
+      {
+        "name": "TILLA",
+        "quantity": 2,
+        "model": "COPER",
+        "price": 620
+      },
+      {
+        "name": "PLAIN SEQUENCE",
+        "quantity": 8,
+        "model": "COPER",
+        "price": 680
+      },
+      {
+        "name": "PANNI",
+        "quantity": 3,
+        "model": "LARGE",
+        "price": 1260
+      },
+      {
+        "name": "PETROL+LIGHT",
+        "quantity": 2,
+        "model": "",
+        "price": 1260
+      }
+    ],
+    "totalAmount": 7040,
+    "date": "2026-06-18",
+    "time": "21:00",
+    "timestamp": "2026-06-18T21:00:00.000Z"
   }
 ]
