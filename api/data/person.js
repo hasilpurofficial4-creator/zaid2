@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       const { data } = await readFile('person');
-      const sorted = data.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      const sorted = data.sort((a, b) => { const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0; const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0; return tB - tA; });
       return res.status(200).json(sorted);
     }
 

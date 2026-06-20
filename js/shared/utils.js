@@ -37,7 +37,7 @@ export function formatCurrency(n) {
 }
 
 export function sortByLatest(arr) {
-  return [...arr].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  return [...arr].sort((a, b) => { const tA = a.timestamp ? new Date(a.timestamp).getTime() : 0; const tB = b.timestamp ? new Date(b.timestamp).getTime() : 0; return tB - tA; });
 }
 
 export function calculateHours(entries, personName, month, year) {
