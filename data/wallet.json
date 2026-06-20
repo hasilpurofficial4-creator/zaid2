@@ -215,5 +215,12 @@
     "personOrPurpose": "SIR NAJAF",
     "amount": 1500,
     "timestamp": "2026-06-20T20:44:52.224Z"
+  },
+  {
+    "id": "wlt_vqj1acrdfi50u",
+    "type": "in",
+    "personOrPurpose": "SIR NAJAF",
+    "amount": 1900,
+    "timestamp": "2026-06-20T20:45:08.346Z"
   }
 ]
