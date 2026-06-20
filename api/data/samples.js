@@ -37,7 +37,9 @@ module.exports = async function handler(req, res) {
         return entries;
       });
       const newest = updated.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-      await sendNotifications('Samples', `Sample ${newest.type === 'in' ? 'In' : 'Out'}: ${newest.personName}`, newest);
+      if (newest.type === 'out') {
+        await sendNotifications('Samples', `Sample Out: ${newest.personName} | ${newest.program} | ${newest.pieces} pcs`, newest);
+      }
       return res.status(201).json(newest);
     }
 

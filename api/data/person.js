@@ -39,7 +39,6 @@ module.exports = async function handler(req, res) {
         return entries;
       });
       const newest = updated.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-      await sendNotifications('Person', `${newest.personName} - ${newest.action === 'enter' ? 'Checked In' : 'Checked Out'}`, newest);
       return res.status(201).json(newest);
     }
 

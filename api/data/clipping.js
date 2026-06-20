@@ -36,8 +36,9 @@ module.exports = async function handler(req, res) {
         return entries;
       });
       const newest = updated.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-      const typeLabel = newest.type === 'in' ? 'Clipped In' : newest.type === 'transfer' ? 'Transfer' : 'Out for Clipping';
-      await sendNotifications('Clipping', `${typeLabel}: ${newest.clipperName}`, newest);
+      if (newest.type === 'in') {
+        await sendNotifications('Clipping', `Clipped In: ${newest.clipperName}`, newest);
+      }
       return res.status(201).json(newest);
     }
 
