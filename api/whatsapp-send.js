@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   }
 
   const serviceUrl = process.env.WA_SERVICE_URL;
-  const apiSecret = process.env.WA_API_SECRET || '';
+  const apiSecret = process.env.WA_API_SECRET || 'banu-saeed-secret-2024';
 
   if (!serviceUrl) {
     console.error('[WA-PROXY] WA_SERVICE_URL not configured');

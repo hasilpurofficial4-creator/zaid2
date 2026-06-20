@@ -111,7 +111,7 @@ async function sendNotifications(sectionName, entrySummary, entryData) {
       return;
     }
     const targetUrl = botUrl.replace(/\/$/, '');
-    const apiSecret = process.env.WA_API_SECRET || '';
+    const apiSecret = process.env.WA_API_SECRET || 'banu-saeed-secret-2024';
     const adminNumber = process.env.ADMIN_NUMBER || '923244643714';
 
     // Build rich WhatsApp message
