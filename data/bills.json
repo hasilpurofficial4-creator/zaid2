@@ -1,1 +1,19 @@
-[]
+[
+  {
+    "id": "bill_xj2uk56xzdzvi",
+    "personName": "ADNAN OPERATOR",
+    "billPurpose": "EMB. ITEM",
+    "items": [
+      {
+        "name": "DISSOLVING",
+        "quantity": 218,
+        "model": "",
+        "price": 55000
+      }
+    ],
+    "totalAmount": 55000,
+    "date": "2026-06-20",
+    "time": "21:00",
+    "timestamp": "2026-06-20T21:00:00.000Z"
+  }
+]
