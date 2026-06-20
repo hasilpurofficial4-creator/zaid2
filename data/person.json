@@ -64,5 +64,11 @@
     "personName": "SHERRY",
     "action": "exit",
     "timestamp": "2026-06-13T03:00:00.000Z"
+  },
+  {
+    "id": "prs_b7js7axxl4sz9",
+    "personName": "SHERRY",
+    "action": "enter",
+    "timestamp": "2026-06-20T07:44:29.250Z"
   }
 ]
