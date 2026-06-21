@@ -1430,5 +1430,15 @@
     "person": "Adnan Butt",
     "status": "available",
     "timestamp": "2026-06-21T15:34:38.012Z"
+  },
+  {
+    "id": "b6pw5nqqjs8eu",
+    "name": "test bot",
+    "number": "0333",
+    "quantity": 12,
+    "model": "9",
+    "person": "Zaid",
+    "status": "available",
+    "timestamp": "2026-06-21T18:05:51.801Z"
   }
 ]
