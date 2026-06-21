@@ -263,5 +263,28 @@
     "date": "2026-05-25",
     "time": "17:00",
     "timestamp": "2026-05-25T17:00:00.000Z"
+  },
+  {
+    "id": "bill_huou9mdr49wu8",
+    "personName": "ADNAN OPERATOR",
+    "billPurpose": "Embroidery Items",
+    "items": [
+      {
+        "name": "THREAD",
+        "quantity": 8,
+        "model": "3018",
+        "price": 1440
+      },
+      {
+        "name": "THREAD",
+        "quantity": 12,
+        "model": "3012",
+        "price": 2160
+      }
+    ],
+    "totalAmount": 3600,
+    "date": "2026-06-21",
+    "time": "20:36",
+    "timestamp": "2026-06-21T20:36:00.000Z"
   }
 ]
