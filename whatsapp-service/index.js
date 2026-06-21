@@ -786,6 +786,7 @@ async function startBot() {
   sock.ev.on('messages.upsert', async ({ messages }) => {
     const msg = messages[0];
     if (!msg.message) return;
+    if (msg.key.fromMe) return; // Ignore bot's own messages
 
     const chatId = msg.key.remoteJid;
 
