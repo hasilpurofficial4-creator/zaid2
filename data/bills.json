@@ -286,5 +286,22 @@
     "date": "2026-06-21",
     "time": "20:36",
     "timestamp": "2026-06-21T20:36:00.000Z"
+  },
+  {
+    "id": "bill_b73rr58ylorm6",
+    "personName": "ADNAN OPERATOR",
+    "billPurpose": "EMBRIDORY ITEM",
+    "items": [
+      {
+        "name": "THREAD",
+        "quantity": 10,
+        "model": "GREAT",
+        "price": 1800
+      }
+    ],
+    "totalAmount": 1800,
+    "date": "2026-06-22",
+    "time": "20:49",
+    "timestamp": "2026-06-22T20:49:00.000Z"
   }
 ]
