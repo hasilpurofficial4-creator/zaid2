@@ -303,5 +303,40 @@
     "date": "2026-06-22",
     "time": "20:49",
     "timestamp": "2026-06-22T20:49:00.000Z"
+  },
+  {
+    "id": "bill_p4a4j09dhh2at",
+    "personName": "adnan operator",
+    "billPurpose": "wood work",
+    "items": [
+      {
+        "name": "wooden lath",
+        "quantity": 2,
+        "model": "",
+        "price": 1600
+      },
+      {
+        "name": "hooks",
+        "quantity": 30,
+        "model": "",
+        "price": 400
+      },
+      {
+        "name": "nail",
+        "quantity": 2,
+        "model": "wall fixers",
+        "price": 80
+      },
+      {
+        "name": "nail",
+        "quantity": 8,
+        "model": "2.4",
+        "price": 20
+      }
+    ],
+    "totalAmount": 2100,
+    "date": "2026-06-23",
+    "time": "21:09",
+    "timestamp": "2026-06-23T21:09:00.000Z"
   }
 ]
