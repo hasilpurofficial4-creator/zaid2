@@ -1420,5 +1420,15 @@
     "status": "available",
     "model": "UNKNOWN",
     "person": "ZAID"
+  },
+  {
+    "id": "cbh7ts71gt4m3",
+    "name": "Tilla",
+    "number": "MB Zebra",
+    "quantity": 1,
+    "model": "",
+    "person": "Zaid",
+    "status": "available",
+    "timestamp": "2026-06-27T19:02:39.621Z"
   }
 ]
