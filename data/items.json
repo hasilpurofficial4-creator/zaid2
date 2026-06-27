@@ -1430,5 +1430,15 @@
     "person": "Zaid",
     "status": "available",
     "timestamp": "2026-06-27T19:02:39.621Z"
+  },
+  {
+    "id": "3jol9b7eliatu",
+    "name": "Tilla",
+    "number": "Fake Silver",
+    "quantity": 1,
+    "model": "Yumi",
+    "person": "Zaid",
+    "status": "available",
+    "timestamp": "2026-06-27T19:03:17.407Z"
   }
 ]
