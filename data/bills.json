@@ -338,5 +338,76 @@
     "date": "2026-06-23",
     "time": "21:09",
     "timestamp": "2026-06-23T21:09:00.000Z"
+  },
+  {
+    "id": "bill_86dzlyxacchwj",
+    "personName": "Zaid",
+    "billPurpose": "Unit Expenses",
+    "items": [
+      {
+        "name": "DINNER",
+        "quantity": 1,
+        "model": "OPERATORS",
+        "price": 1000
+      },
+      {
+        "name": "PETROL",
+        "quantity": 1,
+        "model": "ELECTRICIAN",
+        "price": 400
+      },
+      {
+        "name": "COMPRESSOR WIRE",
+        "quantity": 1,
+        "model": "ELECTRICIAN",
+        "price": 1000
+      },
+      {
+        "name": "FRAME TAPE",
+        "quantity": 1,
+        "model": "ZAID",
+        "price": 250
+      },
+      {
+        "name": "CAPICTOR",
+        "quantity": 1,
+        "model": "MASTER",
+        "price": 1100
+      },
+      {
+        "name": "SWITCH",
+        "quantity": 1,
+        "model": "MASTER",
+        "price": 150
+      },
+      {
+        "name": "BABAN MACHINE SWITCH",
+        "quantity": 1,
+        "model": "Operator",
+        "price": 160
+      },
+      {
+        "name": "TAPE",
+        "quantity": 1,
+        "model": "Operator",
+        "price": 70
+      },
+      {
+        "name": "CLIPPING COST",
+        "quantity": 1,
+        "model": "CLIPPER",
+        "price": 800
+      },
+      {
+        "name": "DISH WASH ITEMS",
+        "quantity": 1,
+        "model": "SOAP ETC.",
+        "price": 300
+      }
+    ],
+    "totalAmount": 5230,
+    "date": "2026-06-28",
+    "time": "11:55",
+    "timestamp": "2026-06-28T11:55:00.000Z"
   }
 ]
